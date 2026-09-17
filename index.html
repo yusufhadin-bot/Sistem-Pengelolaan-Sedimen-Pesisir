@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSS Sedimen Pro v4.7 Professional — Sistem Keputusan Pengelolaan Sedimen Pesisir (Disertasi S3 Teknik Sipil UNDIP)</title>
+    <title>DSS Sedimen Pro v4.8 Professional — Sistem Keputusan Pengelolaan Sedimen Pesisir (Disertasi S3 Teknik Sipil UNDIP)</title>
     
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
@@ -163,7 +163,7 @@
                     </div>
                     <h1 id="mainAppTitle" class="font-tech text-lg md:text-xl lg:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-emerald-400 leading-tight uppercase mt-1">
                         SISTEM PENGELOLAAN SEDIMEN PESISIR BERKELANJUTAN (DSS)
-                     <span class="text-emerald-400 text-[0.6em] align-top">v4.7 PRO</span></h1>
+                     <span class="text-emerald-400 text-[0.6em] align-top">v4.8 PRO</span></h1>
                     <p class="text-xs font-mono text-[var(--text-muted)] mt-1 uppercase tracking-wider flex items-center gap-2 font-bold">
                         <span id="sync-status-dot" class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce"></span> 
                         <span id="sync-status-text">Integrasi Spasial-Dinamis (MIKE21 & VENSIM) Terkalibrasi Data Lapangan</span>
@@ -354,9 +354,12 @@
                                 
                                 <div id="mapSpecificUI" class="transition-opacity duration-300 z-20 absolute inset-0 pointer-events-none">
                                     <!-- TOMBOL ANIMASI PASUT (dipindah ke peta, v4.3.1 — agar panel simulasi kanan tidak sempit) -->
-                                    <div class="absolute top-3 left-3 z-[71] pointer-events-auto">
-                                        <button id="btn-tide-anim" onclick="toggleTideAnim()" class="flex items-center gap-1.5 bg-slate-950/90 border-2 border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] font-black font-mono text-cyan-300 hover:border-cyan-400 transition-all cursor-pointer shadow-lg" title="Animasikan plume mengikuti arus pasang-surut">
+                                    <div class="absolute top-3 left-3 z-[71] pointer-events-auto flex flex-col gap-1.5">
+                                        <button id="btn-tide-anim" onclick="toggleTideAnim()" class="flex items-center gap-1.5 bg-slate-950/90 border-2 border-slate-700 rounded-lg px-2.5 py-1.5 text-[11px] font-black font-mono text-cyan-300 hover:border-cyan-400 transition-all cursor-pointer shadow-lg" title="Animasikan plume mengikuti arus pasang-surut">
                                             <i class="fa-solid fa-water"></i> ANIMASI PASUT
+                                        </button>
+                                        <button id="btn-tide-chart" onclick="openTideChart()" class="flex items-center gap-1.5 bg-slate-950/90 border-2 border-indigo-700 rounded-lg px-2.5 py-1.5 text-[11px] font-black font-mono text-indigo-300 hover:border-indigo-400 hover:text-indigo-200 transition-all cursor-pointer shadow-lg animate-none" title="Buka grafik pasut dinamis (panel bisa digeser)">
+                                            <i class="fa-solid fa-chart-line"></i> GRAFIK PASUT
                                         </button>
                                     </div>
 
@@ -368,6 +371,37 @@
                                         </div>
                                         <div id="plumeInfoBody" class="p-3 text-[13px] font-mono text-slate-300 leading-relaxed space-y-2 max-h-[50vh] overflow-y-auto"></div>
                                     </div>
+                                    <!-- PANEL GRAFIK PASUT DINAMIS (v4.8 — draggable, anti-tutup peta/dasbor) -->
+                                    <div id="tideChartPanel" class="hidden fixed z-[118] w-[330px] sm:w-[380px] bg-slate-950/97 border-2 border-cyan-500/60 rounded-2xl shadow-[0_0_35px_rgba(34,211,238,0.30)] overflow-hidden backdrop-blur-md pointer-events-auto" style="right:12px; bottom:64px;">
+                                        <div id="tideChartHead" class="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-cyan-950/95 via-indigo-950/95 to-slate-950/95 border-b border-cyan-500/40 cursor-move select-none touch-none">
+                                            <span class="text-[13.5px] font-black font-mono text-cyan-300 uppercase tracking-wide flex items-center gap-2"><i class="fa-solid fa-chart-line animate-pulse"></i> Grafik Pasut Morodemak <i class="fa-solid fa-up-down-left-right text-[10px] text-slate-500"></i></span>
+                                            <div class="flex items-center gap-2">
+                                                <button onclick="tideChartMinimize()" id="tideMinBtn" class="text-slate-400 hover:text-cyan-300 text-sm cursor-pointer leading-none w-6 h-6 rounded hover:bg-cyan-900/40 transition-all" title="Perkecil / perbesar"><i class="fa-solid fa-minus"></i></button>
+                                                <button onclick="closeTideChart()" class="text-slate-400 hover:text-rose-300 text-base cursor-pointer leading-none w-6 h-6 rounded hover:bg-rose-900/40 transition-all" title="Tutup"><i class="fa-solid fa-xmark"></i></button>
+                                            </div>
+                                        </div>
+                                        <div id="tideChartBody">
+                                            <canvas id="tideCanvas" class="w-full h-[168px] block"></canvas>
+                                            <div class="px-3 pt-2 flex flex-wrap gap-1.5" id="tideTypeChips"></div>
+                                            <div class="px-3 pt-2 flex items-center gap-2">
+                                                <span class="text-[11.5px] font-mono text-slate-400 font-black uppercase">Kurun Waktu</span>
+                                                <div class="flex gap-1" id="tideWindowChips"></div>
+                                            </div>
+                                            <div class="px-3 pt-2">
+                                                <div class="flex items-center justify-between mb-1">
+                                                    <span class="text-[11.5px] font-mono text-slate-400 font-black uppercase">Slider Waktu Simulasi</span>
+                                                    <span id="tideScrubLabel" class="text-cyan-300 font-black font-mono text-[14px]">0.0 jam</span>
+                                                </div>
+                                                <input id="tideScrub" type="range" min="0" max="24.84" step="0.05" value="0" class="w-full accent-cyan-400 cursor-pointer" oninput="scrubTide(this.value)" title="Geser waktu untuk melihat arah sebaran plume pada fase pasut tertentu">
+                                            </div>
+                                            <div id="tideStatus" class="px-3 pb-2 pt-2.5 space-y-1.5"></div>
+                                            <div class="px-3 pb-3 pt-2 border-t border-slate-800 space-y-1">
+                                                <a href="https://drive.google.com/drive/folders/1yLgT_a6f35jxaEThoHVdqNSmuNmprdh6?usp=sharing" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-[11px] font-mono text-indigo-300 hover:text-indigo-200 underline decoration-indigo-500/50"><i class="fa-solid fa-folder-open"></i> Ref: Data PASUT Morodemak (Google Drive)</a>
+                                                <div class="text-[10.5px] text-slate-500 font-mono leading-snug">η(t) = Σ Aᵢ·cos(2πt/Tᵢ) — 4 komponen harmonik (M2, S2, K1, O1) · Default: campuran condong harian tunggal (khas Pantura Jawa) · Panel ini bisa digeser dengan menahan judulnya.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="absolute bottom-3 right-3 pointer-events-auto flex flex-col gap-2 items-end">
                                         <div class="flex rounded-lg bg-slate-950/90 p-1 border border-emerald-500/50 text-[10px] font-mono font-black shadow-lg">
                                             <button onclick="switchBaseMapLayer('street')" id="mapBtn-street" class="px-2 py-1 rounded text-slate-400 hover:text-white cursor-pointer">STREET</button>
@@ -1718,7 +1752,7 @@ function renderBilateralPlume(valDebit, tidePhase){
                 <h4 class="font-bold text-fuchsia-400 mb-1.5 uppercase flex items-center gap-1.5"><i class="fa-solid fa-satellite-dish"></i> Hasil Render Spasial-Dinamis (v4.3)</h4>
                 <p class="text-slate-300 leading-relaxed">Model adveksi-difusi SSC dari DAS Kali Jajar Baru &amp; Tuntang dirender sebagai <b>plume bilateral dua lobus</b>: lobus kiri (barat, ${Math.round(wKiri*100)}%) dan kanan (timur, ${Math.round(wKanan*100)}%).</p>
                 <p class="text-cyan-300 font-bold mt-2 font-mono text-[11px] bg-slate-950 p-2 rounded border border-slate-800">Regim aktif: <b>${mo.label}</b> (${mo.bulan}) — gelombang ${mo.arah}, Hs=${mo.Hs.toFixed(2)} m, Tp=${mo.Tp.toFixed(1)} s. Angkutan longshore dominan ${mo.drift} dengan Ql(CERC) ≈ ${(ql.Ql_yr/1000).toFixed(0)}rb m³/th.</p>
-                <p class="text-slate-400 mt-2 text-[11px]">Cincin konsentrasi (inti→tengah→luaran) menggambarkan peluruhan Gauss konsentrasi SSC; partikel vektor menunjukkan lintasan adveksi per lobus. Ganti regim lewat toolbar <b class="text-cyan-300">Musim Barat / Musim Timur</b> untuk membandingkan asimetri dispersi. Formula tiap parameter dapat dibuka lewat ikon <i class="fa-solid fa-circle-info text-blue-300"></i> pada panel Simulator Vensim. Aktifkan <b class="text-cyan-300">ANIMASI PASUT</b> (tombol di pojok kiri atas peta) untuk melihat osilasi plume mengikuti arus pasang-surut (u = u_max·sin(2πt/T)). Rincian numerik lengkap kini tersedia rapi di <b class="text-white">Panel Info Plume</b> pojok kiri atas peta (klik ✕ untuk menutup).</p>
+                <p class="text-slate-400 mt-2 text-[11px]">Cincin konsentrasi (inti→tengah→luaran) menggambarkan peluruhan Gauss konsentrasi SSC; partikel vektor menunjukkan lintasan adveksi per lobus. Ganti regim lewat toolbar <b class="text-cyan-300">Musim Barat / Musim Timur</b> untuk membandingkan asimetri dispersi. Formula tiap parameter dapat dibuka lewat ikon <i class="fa-solid fa-circle-info text-blue-300"></i> pada panel Simulator Vensim. Aktifkan <b class="text-cyan-300">ANIMASI PASUT</b> (tombol di pojok kiri atas peta) untuk melihat osilasi plume mengikuti arus pasang-surut (u = u_max·sin(2πt/T)). Buka juga <b class="text-indigo-300">GRAFIK PASUT</b> (panel yang bisa digeser) untuk melihat kurva pasut dan node flood/ebb yang berjalan dinamis mengikuti plume per satuan waktu, lengkap dengan pilihan tipe pasut dan slider kurun waktu. Rincian numerik lengkap kini tersedia rapi di <b class="text-white">Panel Info Plume</b> pojok kiri atas peta (klik ✕ untuk menutup).</p>
             </div>`, "Simulasi spasial-dinamis bilateral berhasil dirender sesuai regim musim aktif.");
         }
 
@@ -2339,7 +2373,7 @@ function renderBilateralPlume(valDebit, tidePhase){
 
                 </div>
                 <div class="bg-slate-900 border-x border-b border-emerald-800/60 rounded-b-2xl p-2 text-center">
-                    <p class="text-[9px] text-slate-400 font-mono">© 2026 DSS Sedimen Pro v4.7 Professional — Disertasi S3 Teknik Sipil UNDIP (Yusuf Hadi Nugroho) | Pengembang: <b class="text-emerald-400">Ir. Mohamad Hartadi</b> — Civil Engineer &amp; AI System Developer | FB: m.hartadi · Blog: newbieonline7.blogspot.com · WA: 0822-3103-6047</p>
+                    <p class="text-[9px] text-slate-400 font-mono">© 2026 DSS Sedimen Pro v4.8 Professional — Disertasi S3 Teknik Sipil UNDIP (Yusuf Hadi Nugroho) | Pengembang: <b class="text-emerald-400">Ir. Mohamad Hartadi</b> — Civil Engineer &amp; AI System Developer | FB: m.hartadi · Blog: newbieonline7.blogspot.com · WA: 0822-3103-6047</p>
                 </div>
             </div>
         </div>
@@ -2382,6 +2416,7 @@ function toggleTideAnim(){
             TIDE_PHASE = (TIDE_PHASE + 0.055) % 1;
             dynamicMapLayers.clearLayers();
             renderBilateralPlume(vd(), TIDE_PHASE);
+            syncTideChart();
         }, 700);
         toastNotifikasi('Animasi arus pasang-surut aktif — plume berosilasi mengikuti fase tide', 'fa-water');
     } else {
@@ -2390,9 +2425,260 @@ function toggleTideAnim(){
         btn.style.borderColor = ''; btn.style.boxShadow = '';
         dynamicMapLayers.clearLayers();
         renderBilateralPlume(vd(), 0);
+        syncTideChart();
         toastNotifikasi('Animasi pasut dihentikan — plume kembali ke kondisi netral (slack water)', 'fa-water');
     }
 }
+
+/* ================= GRAFIK PASUT DINAMIS (v4.8 — draggable tide chart) ================= */
+/* Tipe pasut & amplitudo harmonik (m, relatif MSL). Default: campuran condong harian tunggal
+   (khas Pantura Jawa / Morodemak). Ref data: folder Google Drive "Morodemak" (PASUT, RBR-Tide). */
+const TIDE_HARMONICS = {
+  semi:     { A_M2:0.28, A_S2:0.08, A_K1:0.05, A_O1:0.03, T:12.42, F:0.36, nama:'SEMI-DIURNAL',  ket:'2 pasang-surut/hari (M2+S2 dominan)' },
+  campsemi: { A_M2:0.19, A_S2:0.05, A_K1:0.15, A_O1:0.09, T:12.42, F:0.96, nama:'CAMP. SEMI',    ket:'Campuran condong semi-diurnal' },
+  campdiur: { A_M2:0.12, A_S2:0.04, A_K1:0.22, A_O1:0.13, T:24.84, F:2.19, nama:'CAMP. DIURNAL', ket:'Campuran condong harian tunggal (Morodemak)' },
+  diurnal:  { A_M2:0.04, A_S2:0.01, A_K1:0.30, A_O1:0.17, T:24.84, F:9.40, nama:'DIURNAL',       ket:'Harian tunggal (K1+O1 dominan)' }
+};
+let TIDE_TYPE = 'campdiur';      // tipe pasut aktif (default Morodemak)
+let TIDE_CYCLES = 2;              // jumlah siklus dominan yang ditampilkan
+let TIDE_CHART_OPEN = false, TIDE_PANEL_MIN = false;
+
+function tideEta(t, h){
+  return h.A_M2 * Math.cos(2*Math.PI*t/12.42) + h.A_S2 * Math.cos(2*Math.PI*t/12.00)
+       + h.A_K1 * Math.cos(2*Math.PI*t/23.93) + h.A_O1 * Math.cos(2*Math.PI*t/25.82);
+}
+function tidePhaseToHour(ph){ return (ph||0) * TIDE_HARMONICS[TIDE_TYPE].T; }
+function tideHourToPhase(hrs){ return ((hrs / TIDE_HARMONICS[TIDE_TYPE].T) % 1 + 1) % 1; }
+function tideSlope(t){ return (tideEta(t+0.05, TIDE_HARMONICS[TIDE_TYPE]) - tideEta(t-0.05, TIDE_HARMONICS[TIDE_TYPE])) / 0.1; }
+function tideWindowHours(){ return TIDE_CYCLES * TIDE_HARMONICS[TIDE_TYPE].T; }
+function tideVD(){ const el = document.getElementById('slider-debit'); return el ? parseInt(el.value) : 40; }
+
+function renderTideTypeChips(){
+  const box = document.getElementById('tideTypeChips'); if(!box) return;
+  box.innerHTML = '';
+  Object.entries(TIDE_HARMONICS).forEach(([k,h])=>{
+    const b = document.createElement('button');
+    b.className = 'px-2 py-1 rounded-md text-[11px] font-mono font-black border transition-all cursor-pointer ' +
+      (k===TIDE_TYPE ? 'bg-cyan-600/30 border-cyan-400 text-cyan-200 shadow-[0_0_10px_rgba(34,211,238,0.45)]'
+                     : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-cyan-600 hover:text-cyan-300');
+    b.textContent = h.nama; b.title = h.ket + ' — Formzahl F ≈ ' + h.F.toFixed(1);
+    b.onclick = ()=>{ TIDE_TYPE = k; renderTideTypeChips(); renderTideWindowChips(); updateTideScrub(); drawTideChart(); updateTideStatus();
+      toastNotifikasi('Tipe pasut: ' + h.nama + ' — ' + h.ket, 'fa-chart-line'); };
+    box.appendChild(b);
+  });
+}
+function renderTideWindowChips(){
+  const box = document.getElementById('tideWindowChips'); if(!box) return;
+  box.innerHTML = '';
+  [1,2,4].forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'px-2 py-1 rounded-md text-[11px] font-mono font-black border transition-all cursor-pointer ' +
+      (c===TIDE_CYCLES ? 'bg-indigo-600/30 border-indigo-400 text-indigo-200 shadow-[0_0_10px_rgba(129,140,248,0.45)]'
+                       : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-indigo-500 hover:text-indigo-300');
+    b.textContent = c + '× (' + (c*TIDE_HARMONICS[TIDE_TYPE].T).toFixed(0) + 'j)';
+    b.title = 'Tampilkan ' + c + ' siklus pasut dominan';
+    b.onclick = ()=>{ TIDE_CYCLES = c; renderTideWindowChips(); updateTideScrub(); drawTideChart(); updateTideStatus(); };
+    box.appendChild(b);
+  });
+}
+function updateTideScrub(){
+  const sl = document.getElementById('tideScrub'); const lb = document.getElementById('tideScrubLabel');
+  if(!sl || !lb) return;
+  sl.max = tideWindowHours().toFixed(2);
+  const tNow = tidePhaseToHour(TIDE_PHASE);
+  sl.value = Math.min(tNow, parseFloat(sl.max));
+  lb.textContent = tNow.toFixed(2) + ' jam';
+}
+function scrubTide(v){
+  const h = parseFloat(v);
+  TIDE_PHASE = tideHourToPhase(h);
+  if (window.dynamicMapLayers && (TIDE_ON || dynamicMapLayers.getLayers().length > 0)) {
+    dynamicMapLayers.clearLayers();
+    renderBilateralPlume(tideVD(), TIDE_PHASE);
+  }
+  updateTideScrub(); drawTideChart(); updateTideStatus();
+}
+function tidePhaseInfo(){
+  const h = TIDE_HARMONICS[TIDE_TYPE];
+  const t = tidePhaseToHour(TIDE_PHASE);
+  const eta = tideEta(t, h);
+  const slope = tideSlope(t);
+  const u = 0.55 * Math.abs(Math.sin(2 * Math.PI * TIDE_PHASE));   // konsisten dgn model plume
+  let fase = 'SLACK', arah = 'arus minimum — plume simetris (slack water)';
+  if (slope > 0.02) { fase = 'FLOOD'; arah = 'sebaran terdorong ke muara/darat — plume mengempis & bergeser alongshore'; }
+  else if (slope < -0.02) { fase = 'EBB'; arah = 'sebaran meluas ke laut (lepas pantai) — plume mengembang ±14%'; }
+  return { t, eta, slope, u, fase, arah };
+}
+function updateTideStatus(){
+  const box = document.getElementById('tideStatus'); if(!box) return;
+  const d = tidePhaseInfo();
+  const mo = (window.DSS_MONSOON && DSS_MONSOON[MONSOON]) ? DSS_MONSOON[MONSOON] : null;
+  let badge = '';
+  if (d.fase === 'FLOOD') badge = '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-600/25 border border-emerald-400/60 text-emerald-300 text-[12.5px] font-black font-mono"><i class="fa-solid fa-water"></i> PASANG (FLOOD) ↗</span>';
+  else if (d.fase === 'EBB') badge = '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-orange-600/25 border border-orange-400/60 text-orange-300 text-[12.5px] font-black font-mono"><i class="fa-solid fa-arrows-to-dot"></i> SURUT (EBB) ↘</span>';
+  else badge = '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-700/40 border border-slate-500/60 text-slate-200 text-[12.5px] font-black font-mono"><i class="fa-solid fa-equals"></i> SLACK (PUNCAK/LEMBAH)</span>';
+  const arahColor = d.fase==='FLOOD' ? 'text-emerald-200' : (d.fase==='EBB' ? 'text-orange-200' : 'text-slate-300');
+  box.innerHTML = `
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[13px] text-slate-300">
+      <span>t = <b class="text-white text-[14.5px]">${d.t.toFixed(2)} j</b></span>
+      <span>η = <b class="${d.eta>=0?'text-cyan-300':'text-amber-300'} text-[14.5px]">${(d.eta>=0?'+':'')+d.eta.toFixed(2)} m</b></span>
+      <span>u = <b class="text-white text-[14.5px]">${d.u.toFixed(2)} m/s</b></span>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">${badge}<span class="${arahColor} text-[13px] leading-snug font-medium">${d.arah}</span></div>
+    ${mo ? `<div class="text-[11.5px] font-mono text-slate-400">Drift musim aktif: <b class="text-amber-300">${mo.drift}</b> — geser alongshore plume mengikuti ${d.fase==='FLOOD'?'pasang':'surut'} × arah drift.</div>` : ''}
+  `;
+}
+function drawTideChart(){
+  const cv = document.getElementById('tideCanvas'); if(!cv) return;
+  const ctx = cv.getContext ? cv.getContext('2d') : null; if(!ctx) return;
+  const h = TIDE_HARMONICS[TIDE_TYPE];
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 340, H = cv.clientHeight || 168;
+  if (cv.width !== Math.round(W*dpr) || cv.height !== Math.round(H*dpr)) { cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr); }
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const mL=36, mR=10, mT=10, mB=20;
+  const pw = Math.max(10, W-mL-mR), phH = Math.max(10, H-mT-mB);
+  const tMax = tideWindowHours();
+  const amps = h.A_M2 + h.A_S2 + h.A_K1 + h.A_O1;
+  const yMax = Math.ceil((amps + 0.06) * 20) / 20;
+  const X = t => mL + (t/tMax) * pw;
+  const Y = v => mT + (1 - (v + yMax) / (2*yMax)) * phH;
+  // latar
+  const bg = ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#020617'); bg.addColorStop(1,'#0b1230');
+  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+  // arsir FLOOD (naik, cyan) / EBB (turun, amber)
+  const N = 240; let prevV = tideEta(0,h);
+  const stepT = tMax/N;
+  for(let i=1;i<=N;i++){
+    const t = tMax*i/N, v = tideEta(t,h);
+    ctx.fillStyle = v >= prevV ? 'rgba(34,211,238,0.10)' : 'rgba(251,146,60,0.10)';
+    ctx.fillRect(X(t-stepT), mT, pw/N+1.2, phH);
+    prevV = v;
+  }
+  // grid & sumbu
+  ctx.font = '10px JetBrains Mono, monospace';
+  ctx.strokeStyle = 'rgba(148,163,184,0.20)'; ctx.lineWidth = 1; ctx.fillStyle = '#64748b';
+  for(let yy = -yMax; yy <= yMax + 1e-9; yy += yMax/2){
+    ctx.beginPath(); ctx.moveTo(mL, Y(yy)); ctx.lineTo(W-mR, Y(yy)); ctx.stroke();
+    ctx.fillText(yy.toFixed(1), 3, Y(yy)+3);
+  }
+  ctx.fillStyle = '#94a3b8'; ctx.fillText('m MSL', 3, mT-1);
+  const tStep = tMax > 40 ? 12 : (tMax > 20 ? 6 : 3);
+  ctx.fillStyle = '#64748b';
+  for(let t = 0; t <= tMax; t += tStep){
+    ctx.strokeStyle = 'rgba(148,163,184,0.10)';
+    ctx.beginPath(); ctx.moveTo(X(t), mT); ctx.lineTo(X(t), mT+phH); ctx.stroke();
+    ctx.fillText(t.toFixed(0)+'j', X(t)-6, H-6);
+  }
+  // garis MSL
+  ctx.strokeStyle = 'rgba(34,211,238,0.45)'; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(mL, Y(0)); ctx.lineTo(W-mR, Y(0)); ctx.stroke(); ctx.setLineDash([]);
+  // penanda HW / LW (puncak & lembah)
+  let pSlope = tideSlope(0);
+  for(let t = 0.1; t <= tMax; t += 0.1){
+    const sl = tideSlope(t);
+    if (pSlope > 0 && sl <= 0){
+      ctx.fillStyle = '#22d3ee'; ctx.beginPath(); ctx.arc(X(t-0.05), Y(tideEta(t-0.05,h)), 2.5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(34,211,238,0.85)'; ctx.fillText('HW', X(t-0.05)-7, Y(tideEta(t-0.05,h))-6);
+    } else if (pSlope < 0 && sl >= 0){
+      ctx.fillStyle = '#fb923c'; ctx.beginPath(); ctx.arc(X(t-0.05), Y(tideEta(t-0.05,h)), 2.5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(251,146,60,0.85)'; ctx.fillText('LW', X(t-0.05)-7, Y(tideEta(t-0.05,h))+14);
+    }
+    pSlope = sl;
+  }
+  // kurva pasut (gradasi neon + glow)
+  const grad = ctx.createLinearGradient(mL, 0, W-mR, 0);
+  grad.addColorStop(0, '#22d3ee'); grad.addColorStop(0.5, '#818cf8'); grad.addColorStop(1, '#22d3ee');
+  ctx.strokeStyle = grad; ctx.lineWidth = 2.2;
+  ctx.shadowColor = 'rgba(34,211,238,0.65)'; ctx.shadowBlur = 9;
+  ctx.beginPath();
+  for(let i=0;i<=N;i++){ const t = tMax*i/N, y = Y(tideEta(t,h)); if(i===0) ctx.moveTo(X(t),y); else ctx.lineTo(X(t),y); }
+  ctx.stroke(); ctx.shadowBlur = 0;
+  // NODE DINAMIS: posisi waktu saat ini (driven TIDE_PHASE, sinkron plume)
+  const tNode = tidePhaseToHour(TIDE_PHASE);
+  const pulse = 1 + 0.25 * Math.sin((Date.now()%1200)/1200 * 2*Math.PI);
+  for(let k=1; k*TIDE_HARMONICS[TIDE_TYPE].T + tNode <= tMax; k++){   // jejak siklus berikutnya (ghost)
+    const tg = k*TIDE_HARMONICS[TIDE_TYPE].T + tNode;
+    ctx.fillStyle = 'rgba(129,140,248,0.28)';
+    ctx.beginPath(); ctx.arc(X(tg), Y(tideEta(tg,h)), 4, 0, Math.PI*2); ctx.fill();
+  }
+  // garis pemindai vertikal
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(X(tNode), mT); ctx.lineTo(X(tNode), mT+phH); ctx.stroke();
+  // node utama berdenyut
+  ctx.shadowColor = 'rgba(34,211,238,0.9)'; ctx.shadowBlur = 14;
+  ctx.fillStyle = '#22d3ee';
+  ctx.beginPath(); ctx.arc(X(tNode), Y(tideEta(tNode,h)), 5*pulse, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0; ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.arc(X(tNode), Y(tideEta(tNode,h)), 2.2, 0, Math.PI*2); ctx.fill();
+  // label node
+  const dI = tidePhaseInfo();
+  const nodeCol = dI.fase==='FLOOD' ? '#34d399' : (dI.fase==='EBB' ? '#fb923c' : '#e2e8f0');
+  ctx.fillStyle = nodeCol; ctx.font = 'bold 10px JetBrains Mono, monospace';
+  ctx.fillText(dI.fase, Math.min(X(tNode)+8, W-46), Math.max(mT+10, Y(tideEta(tNode,h))-10));
+}
+function syncTideChart(){
+  if (!TIDE_CHART_OPEN) return;
+  updateTideScrub(); drawTideChart(); updateTideStatus();
+}
+function openTideChart(){
+  const p = document.getElementById('tideChartPanel'); if(!p) return;
+  p.classList.remove('hidden');
+  TIDE_CHART_OPEN = true; TIDE_PANEL_MIN = false;
+  const body = document.getElementById('tideChartBody'); if(body) body.classList.remove('hidden');
+  const mb = document.getElementById('tideMinBtn'); if(mb) mb.innerHTML = '<i class="fa-solid fa-minus"></i>';
+  try {
+    const pos = JSON.parse(localStorage.getItem('tidePanelPos') || 'null');
+    if (pos && pos.left && pos.top){
+      p.style.left = pos.left; p.style.top = pos.top; p.style.right = 'auto'; p.style.bottom = 'auto';
+    }
+  } catch(e){}
+  renderTideTypeChips(); renderTideWindowChips(); updateTideScrub(); drawTideChart(); updateTideStatus();
+  toastNotifikasi('Grafik pasut aktif — node flood/ebb bergerak mengikuti plume. Panel bisa digeser lewat judulnya.', 'fa-chart-line');
+}
+function closeTideChart(){
+  const p = document.getElementById('tideChartPanel'); if(p) p.classList.add('hidden');
+  TIDE_CHART_OPEN = false;
+}
+function tideChartMinimize(){
+  const body = document.getElementById('tideChartBody'); const mb = document.getElementById('tideMinBtn');
+  if(!body || !mb) return;
+  TIDE_PANEL_MIN = !TIDE_PANEL_MIN;
+  if (TIDE_PANEL_MIN) { body.classList.add('hidden'); mb.innerHTML = '<i class="fa-solid fa-plus"></i>'; }
+  else { body.classList.remove('hidden'); mb.innerHTML = '<i class="fa-solid fa-minus"></i>'; drawTideChart(); }
+}
+function makeTidePanelDraggable(){
+  const panel = document.getElementById('tideChartPanel');
+  const head = document.getElementById('tideChartHead');
+  if(!panel || !head) return;
+  let dragging = false, sx = 0, sy = 0, px = 0, py = 0;
+  head.addEventListener('pointerdown', e => {
+    if (e.target.closest('button') || e.target.closest('a')) return;
+    dragging = true;
+    const r = panel.getBoundingClientRect();
+    px = r.left; py = r.top; sx = e.clientX; sy = e.clientY;
+    head.setPointerCapture(e.pointerId);
+    head.style.cursor = 'grabbing';
+  });
+  head.addEventListener('pointermove', e => {
+    if(!dragging) return;
+    let nx = px + (e.clientX - sx), ny = py + (e.clientY - sy);
+    nx = Math.max(4, Math.min(window.innerWidth - 70, nx));
+    ny = Math.max(4, Math.min(window.innerHeight - 36, ny));
+    panel.style.left = nx + 'px'; panel.style.top = ny + 'px';
+    panel.style.right = 'auto'; panel.style.bottom = 'auto';
+  });
+  head.addEventListener('pointerup', () => {
+    if(!dragging) return;
+    dragging = false; head.style.cursor = 'move';
+    try { localStorage.setItem('tidePanelPos', JSON.stringify({ left: panel.style.left, top: panel.style.top })); } catch(e){}
+  });
+}
+if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', makeTidePanelDraggable); }
+else { makeTidePanelDraggable(); }
+
 function setMonsoon(m){
   MONSOON = m; updateMonsoonUI();
   jalankanSimulasiVensim();
