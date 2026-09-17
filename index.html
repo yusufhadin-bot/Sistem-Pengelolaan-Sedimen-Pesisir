@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSS Sedimen Pro v4.8 Professional — Sistem Keputusan Pengelolaan Sedimen Pesisir & Telemetri Pasut Dinamis (Disertasi S3 Teknik Sipil UNDIP)</title>
+    <title>DSS Sedimen Pro v4.8.1 Professional — Sistem Keputusan Pengelolaan Sedimen Pesisir & Telemetri Pasut Dinamis (Disertasi S3 Teknik Sipil UNDIP)</title>
     
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
@@ -213,7 +213,7 @@
                     </div>
                     <h1 id="mainAppTitle" class="font-tech text-lg md:text-xl lg:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-emerald-400 leading-tight uppercase mt-1">
                         SISTEM PENGELOLAAN SEDIMEN PESISIR BERKELANJUTAN (DSS)
-                     <span class="text-cyan-400 text-[0.6em] align-top">v4.8 PRO</span></h1>
+                     <span class="text-cyan-400 text-[0.6em] align-top">v4.8.1 PRO</span></h1>
                     <p class="text-xs font-mono text-[var(--text-muted)] mt-1 uppercase tracking-wider flex items-center gap-2 font-bold">
                         <span id="sync-status-dot" class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce"></span> 
                         <span id="sync-status-text">Integrasi Spasial-Dinamis (MIKE21 & VENSIM) · Telemetri Pasut & Dispersi Sedimen Dinamis</span>
@@ -1179,7 +1179,7 @@
 
                 </div>
                 <div class="bg-slate-900 border-x border-b border-emerald-800/60 rounded-b-2xl p-2 text-center">
-                    <p class="text-[9px] text-slate-400 font-mono">© 2026 DSS Sedimen Pro v4.7 Professional — Disertasi S3 Teknik Sipil UNDIP (Yusuf Hadi Nugroho) | Pengembang: <b class="text-emerald-400">Ir. Mohamad Hartadi</b> — Civil Engineer &amp; AI System Developer | FB: m.hartadi · Blog: newbieonline7.blogspot.com · WA: 0822-3103-6047</p>
+                    <p class="text-[9px] text-slate-400 font-mono">© 2026 DSS Sedimen Pro v4.8.1 Professional — Disertasi S3 Teknik Sipil UNDIP (Yusuf Hadi Nugroho) | Pengembang: <b class="text-emerald-400">Ir. Mohamad Hartadi</b> — Civil Engineer &amp; AI System Developer | FB: m.hartadi · Blog: newbieonline7.blogspot.com · WA: 0822-3103-6047</p>
                 </div>
             </div>
         </div>
@@ -1206,9 +1206,9 @@
 
             <!-- ACTION BUTTONS IN DRAG BAR -->
             <div class="flex items-center gap-1.5 shrink-0 pointer-events-auto">
-                <a href="https://drive.google.com/drive/folders/1yLgT_a6f35jxaEThoHVdqNSmuNmprdh6?usp=sharing" target="_blank" class="px-2 py-1 rounded bg-blue-950/80 border border-blue-500/50 hover:bg-blue-900 text-blue-300 text-[10px] font-mono font-bold flex items-center gap-1 transition-all cursor-pointer shadow" title="Buka Basis Data Pasut &amp; Riset di Google Drive">
-                    <i class="fa-brands fa-google-drive text-blue-400"></i> <span class="hidden sm:inline">G-DRIVE</span>
-                </a>
+                <button type="button" onclick="openVaultModal()" class="px-2 py-1 rounded bg-blue-950/80 border border-blue-500/50 hover:bg-blue-900 text-blue-300 text-[10px] font-mono font-bold flex items-center gap-1 transition-all cursor-pointer shadow" title="Login Username &amp; Password untuk Membuka Basis Data Pasut &amp; Riset di Google Drive">
+                    <i class="fa-solid fa-lock text-blue-400"></i> <i class="fa-brands fa-google-drive text-blue-400"></i> <span class="hidden sm:inline">G-DRIVE</span>
+                </button>
                 <button type="button" onclick="resetTideHUDPos()" class="w-7 h-7 rounded bg-slate-900 border border-slate-700 hover:border-cyan-400 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer" title="Reset Posisi HUD ke Sudut Layar">
                     <i class="fa-solid fa-arrows-to-dot"></i>
                 </button>
@@ -1380,9 +1380,9 @@
             <!-- TECHNICAL CITATION & GOOGLE DRIVE REFERENCE -->
             <div class="p-2 bg-slate-950 border border-slate-800 rounded-lg text-[10px] font-mono text-slate-400 flex items-center justify-between gap-2">
                 <span class="truncate">Basis Data Pasut AWLR Bonang &amp; Disertasi S3 UNDIP</span>
-                <a href="https://drive.google.com/drive/folders/1yLgT_a6f35jxaEThoHVdqNSmuNmprdh6?usp=sharing" target="_blank" class="text-cyan-400 hover:text-cyan-300 font-bold underline flex items-center gap-1 shrink-0">
-                    <i class="fa-brands fa-google-drive"></i> Folder Riset
-                </a>
+                <button type="button" onclick="openVaultModal()" class="text-cyan-400 hover:text-cyan-300 font-bold underline flex items-center gap-1 shrink-0 cursor-pointer" title="Login Username &amp; Password untuk membuka Folder Riset">
+                    <i class="fa-solid fa-lock text-[9px]"></i> <i class="fa-brands fa-google-drive"></i> Folder Riset
+                </button>
             </div>
         </div>
     </div>
@@ -2751,9 +2751,9 @@ function updatePlumeInfoPanel(mo, wKiri, wKanan, ql, tidePhase, uTide){
                 <button type="button" onclick="toggleTideHUD()" class="text-cyan-400 hover:text-cyan-300 underline font-bold cursor-pointer">
                     <i class="fa-solid fa-chart-line"></i> Buka Grafik Pasut HUD
                 </button>
-                <a href="https://drive.google.com/drive/folders/1yLgT_a6f35jxaEThoHVdqNSmuNmprdh6?usp=sharing" target="_blank" class="text-blue-400 hover:text-blue-300 underline flex items-center gap-1">
-                    <i class="fa-brands fa-google-drive"></i> G-Drive Riset
-                </a>
+                <button type="button" onclick="openVaultModal()" class="text-blue-400 hover:text-blue-300 underline flex items-center gap-1 cursor-pointer" title="Login Username &amp; Password untuk membuka G-Drive Riset">
+                    <i class="fa-solid fa-lock text-[9px]"></i> <i class="fa-brands fa-google-drive"></i> G-Drive Riset
+                </button>
             </div>
         </div>`;
 
