@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSS Sedimen Pro v4.8 Professional — Sistem Keputusan Pengelolaan Sedimen Pesisir (Disertasi S3 Teknik Sipil UNDIP)</title>
+    <title>DSS Sedimen Pro v4.8 Professional — Sistem Keputusan Pengelolaan Sedimen Pesisir & Telemetri Pasut Dinamis (Disertasi S3 Teknik Sipil UNDIP)</title>
     
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
@@ -143,6 +143,56 @@
         .shoreline-blinking {
             animation: shorelineFlash 2s infinite ease-in-out;
         }
+    
+        /* ==================== FUTURISTIC DRAGGABLE TIDE HUD STYLES (v4.8 PRO) ==================== */
+        .tide-hud-window {
+            position: fixed;
+            top: 85px;
+            right: 25px;
+            width: 460px;
+            max-width: calc(100vw - 24px);
+            background: rgba(6, 12, 24, 0.95);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 2px solid rgba(6, 182, 212, 0.75);
+            border-radius: 18px;
+            box-shadow: 0 0 35px rgba(6, 182, 212, 0.32), 0 25px 50px -12px rgba(0, 0, 0, 0.9);
+            z-index: 9995;
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+            user-select: none;
+            overflow: hidden;
+        }
+        .tide-hud-window:hover {
+            box-shadow: 0 0 45px rgba(6, 182, 212, 0.45), 0 25px 50px -12px rgba(0, 0, 0, 0.95);
+        }
+        .tide-hud-header {
+            cursor: grab;
+            background: linear-gradient(90deg, rgba(8, 25, 45, 0.98), rgba(15, 23, 42, 0.98), rgba(6, 40, 50, 0.98));
+            border-bottom: 1px solid rgba(6, 182, 212, 0.4);
+            touch-action: none;
+        }
+        .tide-hud-header:active {
+            cursor: grabbing;
+        }
+        .tide-hud-mini-badge {
+            animation: miniBadgePulse 2.5s infinite ease-in-out;
+        }
+        @keyframes miniBadgePulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(6, 182, 212, 0.4); }
+            50% { box-shadow: 0 0 28px rgba(6, 182, 212, 0.85); }
+        }
+        .hud-scanline {
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(6, 182, 212, 0.06) 50%, rgba(6, 182, 212, 0.06));
+            background-size: 100% 4px;
+        }
+        .radar-pulse-ring {
+            animation: radarPing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+        @keyframes radarPing {
+            0% { transform: scale(0.6); opacity: 1; }
+            75%, 100% { transform: scale(2.2); opacity: 0; }
+        }
+
     </style>
 </head>
 <body id="appBody" class="theme-dark bg-[var(--bg-main)] text-[var(--text-main)] p-3 md:p-5 min-h-screen flex flex-col justify-between overflow-x-hidden relative pb-28">
@@ -163,10 +213,10 @@
                     </div>
                     <h1 id="mainAppTitle" class="font-tech text-lg md:text-xl lg:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-emerald-400 leading-tight uppercase mt-1">
                         SISTEM PENGELOLAAN SEDIMEN PESISIR BERKELANJUTAN (DSS)
-                     <span class="text-emerald-400 text-[0.6em] align-top">v4.8 PRO</span></h1>
+                     <span class="text-cyan-400 text-[0.6em] align-top">v4.8 PRO</span></h1>
                     <p class="text-xs font-mono text-[var(--text-muted)] mt-1 uppercase tracking-wider flex items-center gap-2 font-bold">
                         <span id="sync-status-dot" class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce"></span> 
-                        <span id="sync-status-text">Integrasi Spasial-Dinamis (MIKE21 & VENSIM) Terkalibrasi Data Lapangan</span>
+                        <span id="sync-status-text">Integrasi Spasial-Dinamis (MIKE21 & VENSIM) · Telemetri Pasut & Dispersi Sedimen Dinamis</span>
                     </p>
                 </div>
             </div>
@@ -353,13 +403,13 @@
                                 <div id="map" class="w-full h-full z-10"></div>
                                 
                                 <div id="mapSpecificUI" class="transition-opacity duration-300 z-20 absolute inset-0 pointer-events-none">
-                                    <!-- TOMBOL ANIMASI PASUT (dipindah ke peta, v4.3.1 — agar panel simulasi kanan tidak sempit) -->
-                                    <div class="absolute top-3 left-3 z-[71] pointer-events-auto flex flex-col gap-1.5">
-                                        <button id="btn-tide-anim" onclick="toggleTideAnim()" class="flex items-center gap-1.5 bg-slate-950/90 border-2 border-slate-700 rounded-lg px-2.5 py-1.5 text-[11px] font-black font-mono text-cyan-300 hover:border-cyan-400 transition-all cursor-pointer shadow-lg" title="Animasikan plume mengikuti arus pasang-surut">
-                                            <i class="fa-solid fa-water"></i> ANIMASI PASUT
+                                    <!-- TOMBOL KONTROL PASUT & TELEMETRI HUD (v4.8 PRO) -->
+                                    <div class="absolute top-3 left-12 sm:left-14 z-[71] pointer-events-auto flex items-center gap-2">
+                                        <button id="btn-tide-hud-toggle" type="button" onclick="toggleTideHUD()" class="flex items-center gap-1.5 bg-slate-950/90 border-2 border-cyan-500/70 rounded-lg px-2.5 py-1.5 text-[10px] font-black font-mono text-cyan-300 hover:border-cyan-300 hover:bg-cyan-950/60 transition-all cursor-pointer shadow-lg hover:shadow-cyan-500/30" title="Buka / Tutup Grafik Pasut & Telemetri Draggable HUD">
+                                            <i class="fa-solid fa-chart-line text-cyan-400 animate-pulse"></i> GRAFIK PASUT HUD
                                         </button>
-                                        <button id="btn-tide-chart" onclick="openTideChart()" class="flex items-center gap-1.5 bg-slate-950/90 border-2 border-indigo-700 rounded-lg px-2.5 py-1.5 text-[11px] font-black font-mono text-indigo-300 hover:border-indigo-400 hover:text-indigo-200 transition-all cursor-pointer shadow-lg animate-none" title="Buka grafik pasut dinamis (panel bisa digeser)">
-                                            <i class="fa-solid fa-chart-line"></i> GRAFIK PASUT
+                                        <button id="btn-tide-anim" type="button" onclick="toggleTideAnim()" class="flex items-center gap-1.5 bg-slate-950/90 border-2 border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] font-black font-mono text-cyan-300 hover:border-cyan-400 transition-all cursor-pointer shadow-lg" title="Animasikan plume mengikuti arus pasang-surut">
+                                            <i class="fa-solid fa-water"></i> ANIMASI PASUT
                                         </button>
                                     </div>
 
@@ -371,37 +421,6 @@
                                         </div>
                                         <div id="plumeInfoBody" class="p-3 text-[13px] font-mono text-slate-300 leading-relaxed space-y-2 max-h-[50vh] overflow-y-auto"></div>
                                     </div>
-                                    <!-- PANEL GRAFIK PASUT DINAMIS (v4.8 — draggable, anti-tutup peta/dasbor) -->
-                                    <div id="tideChartPanel" class="hidden fixed z-[118] w-[330px] sm:w-[380px] bg-slate-950/97 border-2 border-cyan-500/60 rounded-2xl shadow-[0_0_35px_rgba(34,211,238,0.30)] overflow-hidden backdrop-blur-md pointer-events-auto" style="right:12px; bottom:64px;">
-                                        <div id="tideChartHead" class="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-cyan-950/95 via-indigo-950/95 to-slate-950/95 border-b border-cyan-500/40 cursor-move select-none touch-none">
-                                            <span class="text-[13.5px] font-black font-mono text-cyan-300 uppercase tracking-wide flex items-center gap-2"><i class="fa-solid fa-chart-line animate-pulse"></i> Grafik Pasut Morodemak <i class="fa-solid fa-up-down-left-right text-[10px] text-slate-500"></i></span>
-                                            <div class="flex items-center gap-2">
-                                                <button onclick="tideChartMinimize()" id="tideMinBtn" class="text-slate-400 hover:text-cyan-300 text-sm cursor-pointer leading-none w-6 h-6 rounded hover:bg-cyan-900/40 transition-all" title="Perkecil / perbesar"><i class="fa-solid fa-minus"></i></button>
-                                                <button onclick="closeTideChart()" class="text-slate-400 hover:text-rose-300 text-base cursor-pointer leading-none w-6 h-6 rounded hover:bg-rose-900/40 transition-all" title="Tutup"><i class="fa-solid fa-xmark"></i></button>
-                                            </div>
-                                        </div>
-                                        <div id="tideChartBody">
-                                            <canvas id="tideCanvas" class="w-full h-[168px] block"></canvas>
-                                            <div class="px-3 pt-2 flex flex-wrap gap-1.5" id="tideTypeChips"></div>
-                                            <div class="px-3 pt-2 flex items-center gap-2">
-                                                <span class="text-[11.5px] font-mono text-slate-400 font-black uppercase">Kurun Waktu</span>
-                                                <div class="flex gap-1" id="tideWindowChips"></div>
-                                            </div>
-                                            <div class="px-3 pt-2">
-                                                <div class="flex items-center justify-between mb-1">
-                                                    <span class="text-[11.5px] font-mono text-slate-400 font-black uppercase">Slider Waktu Simulasi</span>
-                                                    <span id="tideScrubLabel" class="text-cyan-300 font-black font-mono text-[14px]">0.0 jam</span>
-                                                </div>
-                                                <input id="tideScrub" type="range" min="0" max="24.84" step="0.05" value="0" class="w-full accent-cyan-400 cursor-pointer" oninput="scrubTide(this.value)" title="Geser waktu untuk melihat arah sebaran plume pada fase pasut tertentu">
-                                            </div>
-                                            <div id="tideStatus" class="px-3 pb-2 pt-2.5 space-y-1.5"></div>
-                                            <div class="px-3 pb-3 pt-2 border-t border-slate-800 space-y-1">
-                                                <a href="https://drive.google.com/drive/folders/1yLgT_a6f35jxaEThoHVdqNSmuNmprdh6?usp=sharing" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-[11px] font-mono text-indigo-300 hover:text-indigo-200 underline decoration-indigo-500/50"><i class="fa-solid fa-folder-open"></i> Ref: Data PASUT Morodemak (Google Drive)</a>
-                                                <div class="text-[10.5px] text-slate-500 font-mono leading-snug">η(t) = Σ Aᵢ·cos(2πt/Tᵢ) — 4 komponen harmonik (M2, S2, K1, O1) · Default: campuran condong harian tunggal (khas Pantura Jawa) · Panel ini bisa digeser dengan menahan judulnya.</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <div class="absolute bottom-3 right-3 pointer-events-auto flex flex-col gap-2 items-end">
                                         <div class="flex rounded-lg bg-slate-950/90 p-1 border border-emerald-500/50 text-[10px] font-mono font-black shadow-lg">
                                             <button onclick="switchBaseMapLayer('street')" id="mapBtn-street" class="px-2 py-1 rounded text-slate-400 hover:text-white cursor-pointer">STREET</button>
@@ -953,7 +972,7 @@
             <button onclick="triggerChatShortcut('status_pesisir')" class="whitespace-nowrap px-2.5 py-1 bg-slate-950 hover:bg-emerald-950 text-emerald-400 text-xs rounded-lg border border-emerald-900 font-bold transition-all cursor-pointer"><i class="fa-solid fa-chart-pie"></i> Status IKS</button>
             <button onclick="triggerChatShortcut('my_aplikasi')" class="whitespace-nowrap px-2.5 py-1 bg-slate-950 hover:bg-orange-950 text-orange-400 text-xs rounded-lg border border-orange-900 font-bold transition-all cursor-pointer"><i class="fa-solid fa-laptop-code"></i> My Aplikasi</button>
             <button onclick="triggerChatShortcut('formula_matematik')" class="whitespace-nowrap px-2.5 py-1 bg-slate-950 hover:bg-blue-950 text-blue-400 text-xs rounded-lg border border-blue-900 font-bold transition-all cursor-pointer"><i class="fa-solid fa-square-root-variable"></i> Formula Model</button>
-            <button onclick="triggerChatShortcut('data_adcp')" class="whitespace-nowrap px-2.5 py-1 bg-slate-950 hover:bg-cyan-950 text-cyan-400 text-xs rounded-lg border border-cyan-900 font-bold transition-all cursor-pointer"><i class="fa-solid fa-water"></i> Data ADCP</button>
+            <button onclick="triggerChatShortcut('telemetri_pasut')" class="whitespace-nowrap px-2.5 py-1 bg-slate-950 hover:bg-cyan-950 text-cyan-400 text-xs rounded-lg border border-cyan-900 font-bold transition-all cursor-pointer"><i class="fa-solid fa-chart-line"></i> Grafik Pasut</button> <button onclick="triggerChatShortcut('data_adcp')" class="whitespace-nowrap px-2.5 py-1 bg-slate-950 hover:bg-cyan-950 text-cyan-400 text-xs rounded-lg border border-cyan-900 font-bold transition-all cursor-pointer"><i class="fa-solid fa-water"></i> Data ADCP</button>
             <button onclick="triggerChatShortcut('skenario_hybrid')" class="whitespace-nowrap px-2.5 py-1 bg-slate-950 hover:bg-purple-950 text-purple-400 text-xs rounded-lg border border-purple-900 font-bold transition-all cursor-pointer"><i class="fa-solid fa-layer-group"></i> Skenario Hybrid</button>
             <button onclick="triggerChatShortcut('peneliti')" class="whitespace-nowrap px-2.5 py-1 bg-slate-950 hover:bg-fuchsia-950 text-fuchsia-400 text-xs rounded-lg border border-fuchsia-900 font-bold transition-all cursor-pointer"><i class="fa-solid fa-graduation-cap"></i> Peneliti & Dev</button>
             
@@ -976,6 +995,9 @@
     <div id="globalActionButtons" class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] pointer-events-none">
         <div class="flex flex-row flex-nowrap items-center gap-2 sm:gap-3 pointer-events-auto relative w-max ml-auto mt-auto">
             <div id="floatingButtonsGroup" class="flex flex-row flex-nowrap items-center gap-2 sm:gap-3 transition-all duration-500 ease-in-out transform origin-right translate-x-0 opacity-100 pr-[3.5rem] sm:pr-[4.5rem]">
+                <button type="button" onclick="toggleTideHUD()" class="bg-cyan-600 hover:bg-cyan-500 text-white border border-cyan-400 h-9 w-9 sm:h-11 sm:w-11 rounded-full shadow-[0_0_18px_rgba(6,182,212,0.7)] flex items-center justify-center transition-transform hover:scale-110 shrink-0 cursor-pointer" title="Buka Grafik Pasut & Telemetri Sebaran Sedimen Dinamis HUD">
+                    <i class="fa-solid fa-chart-line text-sm text-cyan-100"></i>
+                </button>
                 <button type="button" onclick="openStudioPro()" class="bg-teal-600 hover:bg-teal-500 text-white border border-teal-400 h-9 w-9 sm:h-11 sm:w-11 rounded-full shadow-[0_0_15px_rgba(20,184,166,0.6)] flex items-center justify-center transition-transform hover:scale-110 shrink-0 cursor-pointer" title="Studio Analisis Profesional v4.0 (SD, CERC, AHP-TOPSIS, Monte Carlo, CBA)">
                     <i class="fa-solid fa-microscope text-sm"></i>
                 </button>
@@ -1008,6 +1030,374 @@
         </div>
     </div>
 
+    <!-- ==================== STUDIO ANALISIS PROFESIONAL v4.0 ==================== -->
+        <div id="studioProModal" class="fixed inset-0 z-[130] hidden bg-slate-950/95 backdrop-blur-md overflow-y-auto">
+            <div class="min-h-full flex flex-col p-2 sm:p-4">
+                <!-- HEADER -->
+                <div class="bg-slate-900 border border-emerald-800/60 rounded-t-2xl p-3 sm:p-4 flex items-center justify-between gap-2 sticky top-0 z-10 shadow-lg shadow-emerald-900/20">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="h-9 w-9 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-br from-emerald-600 to-cyan-600 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/30">
+                            <i class="fa-solid fa-microscope text-white text-lg"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h2 class="font-tech text-sm sm:text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-emerald-400 uppercase tracking-wide truncate">Studio Analisis Profesional</h2>
+                            <p class="text-[10px] sm:text-xs text-slate-400 font-mono truncate">System Dynamics · CERC · Neraca Sedimen · Bruun · AHP-TOPSIS · Monte Carlo · CBA</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button onclick="DSSPRO.pdf()" class="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-[10px] sm:text-xs font-bold rounded-lg border border-emerald-500 transition-all cursor-pointer whitespace-nowrap"><i class="fa-solid fa-file-pdf mr-1"></i> Laporan PDF</button>
+                        <button onclick="closeStudioPro()" class="h-8 w-8 sm:h-9 sm:w-9 bg-rose-700 hover:bg-rose-600 text-white rounded-lg border border-rose-500 flex items-center justify-center transition-all cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+                <!-- TAB BAR -->
+                <div class="bg-slate-900/80 border-x border-b border-slate-800 px-2 py-1.5 flex flex-wrap gap-1.5">
+                    <button id="proTabBtn-cerc" onclick="proSwitchTab('cerc')" class="px-2.5 py-1 rounded bg-emerald-700 text-white font-bold transition-all cursor-pointer text-[11px]"><i class="fa-solid fa-water mr-1"></i> TRANSPORT LONGSHORE</button>
+                    <button id="proTabBtn-budget" onclick="proSwitchTab('budget')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer text-[11px] font-bold"><i class="fa-solid fa-scale-balanced mr-1"></i> NERACA &amp; GARIS PANTAI</button>
+                    <button id="proTabBtn-ahp" onclick="proSwitchTab('ahp')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer text-[11px] font-bold"><i class="fa-solid fa-layer-group mr-1"></i> AHP-TOPSIS</button>
+                    <button id="proTabBtn-mc" onclick="proSwitchTab('mc')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer text-[11px] font-bold"><i class="fa-solid fa-dice mr-1"></i> MONTE CARLO</button>
+                    <button id="proTabBtn-cba" onclick="proSwitchTab('cba')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer text-[11px] font-bold"><i class="fa-solid fa-chart-line mr-1"></i> EKONOMI (CBA)</button>
+                </div>
+                <div class="bg-slate-900/60 border-x border-b border-slate-800 flex-1 p-2 sm:p-4">
+
+                <!-- ===== PANE A: CERC ===== -->
+                <div id="proPane-cerc">
+                    <div class="grid lg:grid-cols-5 gap-3">
+                        <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-3">
+                            <h3 class="text-xs font-bold text-emerald-400 mb-2 font-mono">PARAMETER GELOMBANG (IKLIM ADCP SAYUNG)</h3>
+                            <label class="block text-[10px] text-slate-400 font-mono mt-1">Tinggi gelombang signifikan Hs (m)</label>
+                            <input id="proInHs" type="number" step="0.05" value="0.60" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white font-mono focus:border-emerald-500 outline-none">
+                            <label class="block text-[10px] text-slate-400 font-mono mt-2">Periode puncak Tp (detik)</label>
+                            <input id="proInTp" type="number" step="0.1" value="4.5" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white font-mono focus:border-emerald-500 outline-none">
+                            <label class="block text-[10px] text-slate-400 font-mono mt-2">Sudut datang gelombang α₀ (°)</label>
+                            <input id="proInA0" type="number" step="1" value="15" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white font-mono focus:border-emerald-500 outline-none">
+                            <label class="block text-[10px] text-slate-400 font-mono mt-2">Koefisien CERC K (SPM 0.77 / USACE 0.39)</label>
+                            <input id="proInK" type="number" step="0.01" value="0.77" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white font-mono focus:border-emerald-500 outline-none">
+                            <button onclick="proRunCerc()" class="mt-3 w-full bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg p-2 border border-emerald-500 transition-all cursor-pointer"><i class="fa-solid fa-play mr-1"></i> HITUNG TRANSPORT SEDIMEN</button>
+                        </div>
+                        <div class="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col gap-2">
+                            <h3 class="text-xs font-bold text-emerald-400 font-mono">HASIL REFRASI SNELL + ENERGI BREAKING</h3>
+                            <div id="proCercOut"></div>
+                            <div class="h-[210px] mt-1"><canvas id="proCercChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== PANE B: NERACA ===== -->
+                <div id="proPane-budget" class="hidden">
+                    <div class="grid lg:grid-cols-2 gap-3">
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
+                            <h3 class="text-xs font-bold text-cyan-400 mb-1 font-mono">NERACA SEDIMEN PESISIR (m³/th per km)</h3>
+                            <div class="grid grid-cols-2 gap-2 text-[10px] font-mono text-slate-400">
+                                <div><label>Qs pasokan sungai</label><input id="proNbRiv" type="number" value="13500" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-cyan-500"></div>
+                                <div><label>Ql masuk (barat)</label><input id="proNbQlin" type="number" value="9000" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-cyan-500"></div>
+                                <div><label>Trapping mangrove/struktur</label><input id="proNbTrap" type="number" value="5200" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-cyan-500"></div>
+                                <div><label>Ql keluar (timur)</label><input id="proNbQlout" type="number" value="15500" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-cyan-500"></div>
+                                <div><label>Pengerukan alur Eh</label><input id="proNbDredge" type="number" value="2700" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-cyan-500"></div>
+                                <div><label>Defisit Bruun SLR</label><input id="proNbBruun" type="number" value="7260" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-cyan-500"></div>
+                                <div class="col-span-2"><label>Erosi gelombang Er</label><input id="proNbEr" type="number" value="8600" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-cyan-500"></div>
+                            </div>
+                            <button onclick="proRunBudget()" class="mt-2 w-full bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-bold rounded-lg p-2 border border-cyan-500 transition-all cursor-pointer"><i class="fa-solid fa-play mr-1"></i> HITUNG NERACA</button>
+                            <div id="proNbOut" class="mt-2"></div>
+                            <div class="h-[200px] mt-2"><canvas id="proBudgetChart"></canvas></div>
+                        </div>
+                        <div class="flex flex-col gap-3">
+                            <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
+                                <h3 class="text-xs font-bold text-amber-400 mb-1 font-mono">BRUUN RULE — RETRET KARENA SLR + SUBSIDEN</h3>
+                                <div class="grid grid-cols-4 gap-1.5 text-[9px] font-mono text-slate-400">
+                                    <div><label>SLR (mm/th)</label><input id="proBrS" type="number" value="12" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-xs text-white outline-none focus:border-amber-500"></div>
+                                    <div><label>L profil (m)</label><input id="proBrL" type="number" value="800" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-xs text-white outline-none focus:border-amber-500"></div>
+                                    <div><label>h* (m)</label><input id="proBrH" type="number" value="12" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-xs text-white outline-none focus:border-amber-500"></div>
+                                    <div><label>B berm (m)</label><input id="proBrB" type="number" value="1.5" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-xs text-white outline-none focus:border-amber-500"></div>
+                                </div>
+                                <button onclick="proRunBudget()" class="mt-2 w-full bg-amber-700 hover:bg-amber-600 text-white text-[11px] font-bold rounded-lg p-1.5 border border-amber-500 transition-all cursor-pointer">HITUNG BRUUN</button>
+                                <div id="proBrOut" class="mt-2 text-xs font-mono"></div>
+                            </div>
+                            <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 flex-1">
+                                <h3 class="text-xs font-bold text-emerald-400 mb-1 font-mono">ONE-LINE MODEL — EVOLUSI GARIS PANTAI (5 KM)</h3>
+                                <div class="grid grid-cols-3 gap-1.5 text-[9px] font-mono text-slate-400">
+                                    <div><label>Ql (ribu m³/th)</label><input id="proOlQl" type="number" value="180" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-xs text-white outline-none focus:border-emerald-500"></div>
+                                    <div><label>Durasi (th)</label><input id="proOlYears" type="number" value="10" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-xs text-white outline-none focus:border-emerald-500"></div>
+                                    <div><label>Posisi groin (m)</label><input id="proOlGroin" type="number" value="2500" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-xs text-white outline-none focus:border-emerald-500"></div>
+                                </div>
+                                <button onclick="proRunBudget()" class="mt-2 w-full bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-bold rounded-lg p-1.5 border border-emerald-500 transition-all cursor-pointer">SIMULASI ONE-LINE</button>
+                                <div class="h-[220px] mt-2"><canvas id="proOnelineChart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== PANE C: AHP-TOPSIS ===== -->
+                <div id="proPane-ahp" class="hidden">
+                    <div class="grid lg:grid-cols-2 gap-3">
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
+                            <h3 class="text-xs font-bold text-purple-400 mb-1 font-mono">MATRIKS PERBANDINGAN BERPASANGAN SAATY (5 KRITERIA)</h3>
+                            <div id="proAhpMatrix" class="space-y-1"></div>
+                            <button onclick="proRunAhp()" class="mt-2 w-full bg-purple-700 hover:bg-purple-600 text-white text-xs font-bold rounded-lg p-2 border border-purple-500 transition-all cursor-pointer"><i class="fa-solid fa-play mr-1"></i> HITUNG BOBOT AHP + RANKING TOPSIS</button>
+                            <div id="proAhpOut" class="mt-2"></div>
+                            <div class="h-[200px] mt-2"><canvas id="proAhpChart"></canvas></div>
+                        </div>
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
+                            <h3 class="text-xs font-bold text-emerald-400 mb-1 font-mono">TOPSIS — PERANGKINGAN 4 SKENARIO (BASIS: HASIL SD 2024-2040)</h3>
+                            <div id="proTopsisOut" class="text-xs"></div>
+                            <div class="h-[260px] mt-2"><canvas id="proTopsisChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== PANE D: MONTE CARLO ===== -->
+                <div id="proPane-mc" class="hidden">
+                    <div class="grid lg:grid-cols-2 gap-3">
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
+                            <h3 class="text-xs font-bold text-sky-400 mb-1 font-mono">ANALISIS KETIDAKPASTIAN MONTE CARLO</h3>
+                            <p class="text-[10px] text-slate-500 mb-2 leading-relaxed">Mesin SD dijalankan berulang dengan 4 parameter kunci (debit, restorasi mangrove, pengerukan, kekuatan kebijakan) diacak ±deviasi dari nilai slider saat ini (distribusi segitiga) + noise koefisien model. <b class="text-slate-400">P(IKS&lt;0.45)</b> = persentase simulasi yang jatuh ke kategori KRITIS. Nilai <b class="text-emerald-400">0%</b> berarti skenario ROBUST (aman) pada rentang ketidakpastian ini — bukan galat.</p>
+                            <div class="grid grid-cols-2 gap-2 text-[10px] font-mono text-slate-400">
+                                <div><label>Jumlah iterasi</label><input id="proMcN" type="number" value="1000" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-sky-500"></div>
+                                <div><label>Deviasi parameter (± %)</label><input id="proMcJ" type="number" value="20" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-sky-500"></div>
+                            </div>
+                            <button onclick="proRunMC()" class="mt-2 w-full bg-sky-700 hover:bg-sky-600 text-white text-xs font-bold rounded-lg p-2 border border-sky-500 transition-all cursor-pointer"><i class="fa-solid fa-dice mr-1"></i> JALANKAN 1000 ITERASI MONTE CARLO</button>
+                            <div id="proMcOut" class="mt-2"></div>
+                            <div class="h-[220px] mt-2"><canvas id="proMcChart"></canvas></div>
+                        </div>
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
+                            <h3 class="text-xs font-bold text-rose-400 mb-1 font-mono">DIAGRAM TORNADO — SENSITIVITAS SATU-PER-SATU (±15%)</h3>
+                            <div class="h-[420px]"><canvas id="proTornadoChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== PANE E: CBA ===== -->
+                <div id="proPane-cba" class="hidden">
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <h3 class="text-xs font-bold text-amber-400 font-mono">COST-BENEFIT ANALYSIS — NPV / BCR / IRR / PAYBACK</h3>
+                            <button onclick="proRunCBA()" class="bg-amber-700 hover:bg-amber-600 text-white text-xs font-bold rounded-lg px-3 py-1.5 border border-amber-500 transition-all cursor-pointer"><i class="fa-solid fa-play mr-1"></i> HITUNG CBA 4 SKENARIO</button>
+                        </div>
+                        <div id="proCbaOut" class="mt-2"></div>
+                        <div class="h-[280px] mt-3"><canvas id="proCbaChart"></canvas></div>
+                    </div>
+                </div>
+
+                </div>
+                <div class="bg-slate-900 border-x border-b border-emerald-800/60 rounded-b-2xl p-2 text-center">
+                    <p class="text-[9px] text-slate-400 font-mono">© 2026 DSS Sedimen Pro v4.7 Professional — Disertasi S3 Teknik Sipil UNDIP (Yusuf Hadi Nugroho) | Pengembang: <b class="text-emerald-400">Ir. Mohamad Hartadi</b> — Civil Engineer &amp; AI System Developer | FB: m.hartadi · Blog: newbieonline7.blogspot.com · WA: 0822-3103-6047</p>
+                </div>
+            </div>
+        </div>
+
+    
+    <!-- ==================== DRAGGABLE FLOATING TIDE TELEMETRY HUD (v4.8 PRO) ==================== -->
+    <div id="floatingTideHUD" class="tide-hud-window flex flex-col font-sans">
+        
+        <!-- HUD HEADER & DRAG HANDLE -->
+        <div id="tideHUDDragHandle" class="tide-hud-header px-3.5 py-2.5 flex items-center justify-between gap-2 select-none">
+            <div class="flex items-center gap-2.5 min-w-0 pointer-events-none">
+                <div class="w-8 h-8 rounded-lg bg-cyan-950/90 border border-cyan-400/60 flex items-center justify-center text-cyan-400 shadow-md shrink-0">
+                    <i class="fa-solid fa-water animate-pulse text-sm"></i>
+                </div>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="text-xs font-tech font-black text-cyan-300 tracking-wider uppercase">TELEMETRI PASUT &amp; DISPERSI</span>
+                        <span id="tideHudLiveDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span class="text-[9px] font-mono text-emerald-400 bg-emerald-950/70 border border-emerald-500/40 px-1 rounded uppercase">LIVE HUD</span>
+                    </div>
+                    <p class="text-[10px] font-mono text-slate-400 truncate">Stasiun AWLR Bonang &amp; Muara Kali Jajar (Demak)</p>
+                </div>
+            </div>
+
+            <!-- ACTION BUTTONS IN DRAG BAR -->
+            <div class="flex items-center gap-1.5 shrink-0 pointer-events-auto">
+                <a href="https://drive.google.com/drive/folders/1yLgT_a6f35jxaEThoHVdqNSmuNmprdh6?usp=sharing" target="_blank" class="px-2 py-1 rounded bg-blue-950/80 border border-blue-500/50 hover:bg-blue-900 text-blue-300 text-[10px] font-mono font-bold flex items-center gap-1 transition-all cursor-pointer shadow" title="Buka Basis Data Pasut &amp; Riset di Google Drive">
+                    <i class="fa-brands fa-google-drive text-blue-400"></i> <span class="hidden sm:inline">G-DRIVE</span>
+                </a>
+                <button type="button" onclick="resetTideHUDPos()" class="w-7 h-7 rounded bg-slate-900 border border-slate-700 hover:border-cyan-400 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer" title="Reset Posisi HUD ke Sudut Layar">
+                    <i class="fa-solid fa-arrows-to-dot"></i>
+                </button>
+                <button type="button" onclick="toggleMinimizeTideHUD()" class="w-7 h-7 rounded bg-slate-900 border border-slate-700 hover:border-amber-400 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer" title="Perkecil ke Badge Melayang">
+                    <i id="tideHudMinIcon" class="fa-solid fa-window-minimize -mt-1.5"></i>
+                </button>
+                <button type="button" onclick="toggleTideHUD()" class="w-7 h-7 rounded bg-slate-900 border border-slate-700 hover:border-rose-400 text-slate-300 hover:text-rose-400 flex items-center justify-center text-xs transition-colors cursor-pointer" title="Tutup Jendela HUD">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- HUD BODY -->
+        <div id="tideHUDBody" class="p-3.5 space-y-3 max-h-[78vh] overflow-y-auto custom-scrollbar hud-scanline">
+            
+            <!-- CONTROLS: TIPE PASUT & KONDISI PURNAMA/PERBANI -->
+            <div class="bg-slate-950/85 border border-slate-800 rounded-xl p-2.5 space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                    <label class="text-[11px] font-mono font-bold text-cyan-300 uppercase flex items-center gap-1.5">
+                        <i class="fa-solid fa-sliders text-cyan-400"></i> Tipe Pasut (Formzahl):
+                    </label>
+                    <span id="tideFormzahlBadge" class="text-[10px] font-mono font-bold bg-cyan-950 text-cyan-400 border border-cyan-600/50 px-2 py-0.5 rounded">F = 2.21</span>
+                </div>
+                <select id="tideModelSelect" onchange="onTideModelChange(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-cyan-400 font-mono cursor-pointer">
+                    <option value="campuran_tunggal" selected>1. Campuran Condong Harian Tunggal (Demak / Stn. Bonang - F=2.21)</option>
+                    <option value="harian_tunggal">2. Harian Tunggal / Pure Diurnal (K1+O1 Dominan - F=3.52)</option>
+                    <option value="harian_ganda">3. Harian Ganda / Pure Semidiurnal (M2+S2 Dominan - F=0.17)</option>
+                    <option value="campuran_ganda">4. Campuran Condong Harian Ganda (F=0.88)</option>
+                </select>
+
+                <!-- SPRING / NEAP TOGGLE BUTTONS -->
+                <div class="flex items-center gap-1.5 pt-1">
+                    <span class="text-[10px] font-mono text-slate-400 uppercase font-bold">Kondisi Astronomis:</span>
+                    <button type="button" id="btn-tide-spring" onclick="setSpringNeap(true)" class="flex-1 px-2 py-1 bg-cyan-900/60 border border-cyan-400 text-cyan-300 text-[10px] font-mono font-bold rounded hover:bg-cyan-800 transition-colors cursor-pointer text-center">
+                        <i class="fa-solid fa-moon text-cyan-400"></i> PURNAMA (SPRING)
+                    </button>
+                    <button type="button" id="btn-tide-neap" onclick="setSpringNeap(false)" class="flex-1 px-2 py-1 bg-slate-900 border border-slate-700 text-slate-400 text-[10px] font-mono font-bold rounded hover:bg-slate-800 transition-colors cursor-pointer text-center">
+                        <i class="fa-solid fa-circle-half-stroke"></i> PERBANI (NEAP)
+                    </button>
+                </div>
+            </div>
+
+            <!-- REAL-TIME TELEMETRY METRIC CARDS (4-GRID) -->
+            <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                
+                <!-- CARD 1: ELEVASI & FASE -->
+                <div class="p-2.5 bg-slate-950/85 border border-slate-800 rounded-xl flex flex-col justify-between">
+                    <div class="flex justify-between items-center text-[10px] text-slate-400">
+                        <span class="uppercase">Elevasi Muka Air (η)</span>
+                        <i id="tidePhaseIcon" class="fa-solid fa-arrow-trend-up text-emerald-400"></i>
+                    </div>
+                    <div class="my-1">
+                        <span id="tideHudElevVal" class="text-xl font-tech font-black text-cyan-300 tracking-tight">+0.78 m</span>
+                        <span class="text-[9px] text-slate-400 block font-mono">MSL (LLWL: <span id="tideHudLLWL">+1.68m</span>)</span>
+                    </div>
+                    <div id="tideHudStateBadge" class="px-2 py-0.5 rounded text-[10px] font-black uppercase text-center bg-emerald-950/80 text-emerald-400 border border-emerald-500/50">
+                        PASANG (FLOOD) ↑
+                    </div>
+                </div>
+
+                <!-- CARD 2: KECEPATAN ARUS PASUT -->
+                <div class="p-2.5 bg-slate-950/85 border border-slate-800 rounded-xl flex flex-col justify-between">
+                    <div class="flex justify-between items-center text-[10px] text-slate-400">
+                        <span class="uppercase">Kecepatan Arus (u)</span>
+                        <i class="fa-solid fa-gauge-high text-cyan-400"></i>
+                    </div>
+                    <div class="my-1">
+                        <span id="tideHudVelocityVal" class="text-xl font-tech font-black text-white tracking-tight">0.45 m/s</span>
+                        <span id="tideHudKnotsVal" class="text-[9px] text-slate-400 block font-mono">0.87 knot (ADCP Lapangan)</span>
+                    </div>
+                    <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800">
+                        <div id="tideHudVelBar" class="h-full bg-cyan-400 transition-all duration-300" style="width: 52%"></div>
+                    </div>
+                </div>
+
+                <!-- CARD 3: ARAH DISPERSI & HEADING -->
+                <div class="p-2.5 bg-slate-950/85 border border-slate-800 rounded-xl col-span-2">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-compass text-amber-400"></i> Vektor Resultan Sebaran Sedimen:
+                        </span>
+                        <span id="tideHudAzimuthText" class="text-[11px] font-bold text-amber-300">Heading 128° (Tenggara / ESE)</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <!-- COMPASS RADAR MINI GAUGE -->
+                        <div class="w-14 h-14 rounded-full bg-slate-900 border border-slate-700 relative flex items-center justify-center shrink-0 shadow-inner">
+                            <div class="absolute inset-0 rounded-full border border-cyan-500/20 radar-pulse-ring pointer-events-none"></div>
+                            <span class="absolute top-0.5 text-[8px] font-mono text-slate-500 font-bold">U</span>
+                            <span class="absolute bottom-0.5 text-[8px] font-mono text-slate-500 font-bold">S</span>
+                            <span class="absolute left-1 text-[8px] font-mono text-slate-500 font-bold">B</span>
+                            <span class="absolute right-1 text-[8px] font-mono text-slate-500 font-bold">T</span>
+                            <div id="tideCompassNeedle" class="w-1 h-9 bg-gradient-to-t from-transparent via-amber-400 to-rose-500 rounded-full origin-center transition-transform duration-300" style="transform: rotate(128deg);"></div>
+                            <div class="w-2 h-2 rounded-full bg-white absolute z-10 border border-slate-900"></div>
+                        </div>
+                        <div class="flex-1 text-[11px] leading-snug">
+                            <div id="tideHudDispersionMode" class="font-bold text-emerald-300 mb-0.5">ONSHORE SEDIMENT RETENTION</div>
+                            <p id="tideHudEstuaryStatus" class="text-[10.5px] text-slate-300">Saat pasang (flood), arus menahan debit sedimen ke darat; partikel mengendap dekat muara Kali Jajar &amp; disaring sabuk mangrove Sayung.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CANVAS GRAFIK PASUT DENGAN TITIK NODAL BERJALAN DINAMIS -->
+            <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 relative">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[11px] font-tech font-bold text-cyan-300 uppercase flex items-center gap-1.5">
+                        <i class="fa-solid fa-wave-square text-cyan-400"></i> Kurva Pasut 24 Jam &amp; Nodal Dinamis
+                    </span>
+                    <span class="text-[9px] font-mono text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                        Klik / Geser Grafik
+                    </span>
+                </div>
+                
+                <!-- CANVAS ELEMENT -->
+                <div class="w-full h-[155px] relative rounded-lg overflow-hidden border border-slate-800 bg-[#030814]">
+                    <canvas id="tideCanvas" class="w-full h-full cursor-crosshair"></canvas>
+                </div>
+                
+                <!-- LEGEND -->
+                <div class="flex items-center justify-between text-[9px] font-mono text-slate-400 mt-1.5 px-1">
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Pasang (Flood / Rising)</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Surut (Ebb / Falling)</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400 border border-white inline-block animate-ping"></span> Titik Nodal Waktu</span>
+                </div>
+            </div>
+
+            <!-- SCRUBBING TIME SLIDER & PLAYBACK CONTROLS -->
+            <div class="bg-slate-950/85 border border-slate-800 rounded-xl p-2.5 space-y-2">
+                <div class="flex items-center justify-between text-xs font-mono">
+                    <span class="text-slate-300 font-bold flex items-center gap-1.5">
+                        <i class="fa-regular fa-clock text-cyan-400"></i> WAKTU SIKLUS:
+                    </span>
+                    <span id="tideHudTimeDisplay" class="font-tech font-black text-cyan-300 text-sm bg-slate-900 px-2.5 py-0.5 rounded border border-cyan-500/40">
+                        Jam 06:00 WIB
+                    </span>
+                </div>
+                
+                <!-- SLIDER -->
+                <div class="relative pt-1 pb-1">
+                    <input type="range" id="slider-tide-time" min="0" max="24" step="0.25" value="6" oninput="onTideSliderInput(this.value)" class="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-800 rounded-lg">
+                    <div class="flex justify-between text-[8.5px] font-mono text-slate-400 mt-1">
+                        <span>00:00</span>
+                        <span>04:00</span>
+                        <span>08:00</span>
+                        <span>12:00</span>
+                        <span>16:00</span>
+                        <span>20:00</span>
+                        <span>24:00</span>
+                    </div>
+                </div>
+
+                <!-- PLAYBACK BUTTONS -->
+                <div class="grid grid-cols-5 gap-1.5 pt-1 text-xs font-mono">
+                    <button type="button" onclick="stepTideHour(-1)" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 py-1.5 rounded-lg flex items-center justify-center transition-colors cursor-pointer" title="Mundur 1 Jam">
+                        <i class="fa-solid fa-backward-step mr-1"></i> -1j
+                    </button>
+                    <button type="button" id="btn-tide-hud-play" onclick="toggleTideAnim()" class="col-span-2 bg-gradient-to-r from-cyan-700 to-emerald-700 hover:from-cyan-600 hover:to-emerald-600 text-white font-bold py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer">
+                        <i id="tideHudPlayIcon" class="fa-solid fa-play text-xs"></i> <span id="tideHudPlayText">ANIMASIKAN</span>
+                    </button>
+                    <button type="button" onclick="stepTideHour(1)" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 py-1.5 rounded-lg flex items-center justify-center transition-colors cursor-pointer" title="Maju 1 Jam">
+                        +1j <i class="fa-solid fa-forward-step ml-1"></i>
+                    </button>
+                    <button type="button" onclick="cycleTideSpeed()" id="btn-tide-speed" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-400 font-bold py-1.5 rounded-lg flex items-center justify-center transition-colors cursor-pointer" title="Kecepatan Animasi">
+                        1x
+                    </button>
+                </div>
+            </div>
+
+            <!-- TECHNICAL CITATION & GOOGLE DRIVE REFERENCE -->
+            <div class="p-2 bg-slate-950 border border-slate-800 rounded-lg text-[10px] font-mono text-slate-400 flex items-center justify-between gap-2">
+                <span class="truncate">Basis Data Pasut AWLR Bonang &amp; Disertasi S3 UNDIP</span>
+                <a href="https://drive.google.com/drive/folders/1yLgT_a6f35jxaEThoHVdqNSmuNmprdh6?usp=sharing" target="_blank" class="text-cyan-400 hover:text-cyan-300 font-bold underline flex items-center gap-1 shrink-0">
+                    <i class="fa-brands fa-google-drive"></i> Folder Riset
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MINIMIZED TIDE HUD BADGE (CHIP WIDGET) -->
+    <div id="tideHUDMiniBadge" onclick="toggleMinimizeTideHUD()" class="hidden fixed bottom-6 left-6 z-[9995] bg-slate-950/95 border-2 border-cyan-500/80 rounded-full px-3.5 py-2 shadow-[0_0_20px_rgba(6,182,212,0.4)] backdrop-blur-md cursor-pointer flex items-center gap-2.5 font-mono text-xs tide-hud-mini-badge" title="Klik untuk memperbesar Telemetri Pasut HUD">
+        <i class="fa-solid fa-water text-cyan-400 animate-pulse text-sm"></i>
+        <div class="flex items-center gap-2 text-white">
+            <span id="miniTideElev" class="font-bold text-cyan-300">+0.78m</span>
+            <span id="miniTidePhase" class="px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-400 text-[10px] font-bold border border-emerald-500/50">FLOOD ↑</span>
+            <span id="miniTideTime" class="text-slate-400 text-[11px]">06:00 WIB</span>
+        </div>
+        <i class="fa-solid fa-up-right-and-down-left-from-center text-slate-400 text-xs hover:text-white"></i>
+    </div>
+
     <!-- SCREENSAVER (3D Earth & Wisdom Quotes) -->
     <div id="screensaverScreen" class="bg-slate-950/95 transition-all duration-500 cursor-pointer backdrop-blur-md p-4 pointer-events-auto z-[10010] fixed inset-0 flex flex-col items-center justify-center" onclick="deactivateScreensaver()">
         <div class="relative z-10 flex flex-col items-center justify-center text-center w-full h-full max-w-4xl mx-auto">
@@ -1027,7 +1417,736 @@
 
     <!-- SCRIPT ENGINE -->
     <script>
-        let currentTheme = 'dark';
+
+// =========================================================================
+// 1. GLOBAL MODELS & OCEANOGRAPHIC CONSTANTS (v4.8 PRO)
+// =========================================================================
+var DSS_MONSOON = {
+  barat: {
+    label: "Musim Barat", bulan: "November–Maret", Hs: 1.90, Tp: 7.2, alpha0: 315, alphaCERC: 45,
+    arah: "dari Barat Laut (315°)", fEw: 1.35, fLs: 1.30, spread: 0.85,
+    drift: "ke TIMUR (lobus kanan muara)", driftDir: 1, domLobe: "kanan",
+    wKiri: 0.34, wKanan: 0.66
+  },
+  timur: {
+    label: "Musim Timur", bulan: "Juni–September", Hs: 1.15, Tp: 5.4, alpha0: 45, alphaCERC: 45,
+    arah: "dari Timur Laut (45°)", fEw: 0.85, fLs: 0.75, spread: 1.25,
+    drift: "ke BARAT (lobus kiri muara)", driftDir: -1, domLobe: "kiri",
+    wKiri: 0.66, wKanan: 0.34
+  }
+};
+
+var MONSOON = 'timur';
+var TIDE_ON = false;
+var TIDE_T = null;
+var TIDE_PHASE = 0.25;
+var TIDE_HOUR = 6.0;
+var TIDE_MODEL_KEY = 'campuran_tunggal';
+var TIDE_IS_SPRING = true;
+var TIDE_ANIM_SPEED = 1.0;
+var TIDE_RIPPLE_PHASE = 0;
+var tideAnimFrameId = null;
+
+var TIDE_MODELS = {
+    campuran_tunggal: {
+        name: "Campuran Condong Harian Tunggal (Demak / Stn. Bonang)",
+        formzahl: 2.21,
+        desc: "Karakteristik khas Pesisir Demak & Semarang: 1 pasang tinggi, 1 pasang rendah, 1 surut utama.",
+        constituents: [
+            { name: "K1", A: 0.38, omega: 15.04, g: 110 },
+            { name: "O1", A: 0.24, omega: 13.94, g: 85 },
+            { name: "M2", A: 0.16, omega: 28.98, g: 210 },
+            { name: "S2", A: 0.12, omega: 30.00, g: 250 }
+        ]
+    },
+    harian_tunggal: {
+        name: "Harian Tunggal / Pure Diurnal",
+        formzahl: 3.52,
+        desc: "Didominasi komponen diurnal K1 & O1: 1 kali pasang dan 1 kali surut per 24 jam.",
+        constituents: [
+            { name: "K1", A: 0.58, omega: 15.04, g: 90 },
+            { name: "O1", A: 0.32, omega: 13.94, g: 75 },
+            { name: "M2", A: 0.08, omega: 28.98, g: 190 },
+            { name: "S2", A: 0.05, omega: 30.00, g: 220 }
+        ]
+    },
+    harian_ganda: {
+        name: "Harian Ganda / Pure Semidiurnal",
+        formzahl: 0.17,
+        desc: "Didominasi komponen semidiurnal M2 & S2: 2 kali pasang dan 2 kali surut hampir simetris per 24 jam.",
+        constituents: [
+            { name: "M2", A: 0.62, omega: 28.98, g: 120 },
+            { name: "S2", A: 0.30, omega: 30.00, g: 150 },
+            { name: "K1", A: 0.09, omega: 15.04, g: 60 },
+            { name: "O1", A: 0.07, omega: 13.94, g: 45 }
+        ]
+    },
+    campuran_ganda: {
+        name: "Campuran Condong Harian Ganda",
+        formzahl: 0.88,
+        desc: "Dua kali pasang dan dua kali surut sehari dengan variasi tinggi dan periode.",
+        constituents: [
+            { name: "M2", A: 0.45, omega: 28.98, g: 130 },
+            { name: "S2", A: 0.22, omega: 30.00, g: 160 },
+            { name: "K1", A: 0.24, omega: 15.04, g: 70 },
+            { name: "O1", A: 0.16, omega: 13.94, g: 50 }
+        ]
+    }
+};
+
+
+
+// =========================================================================
+// 2. MODUL TELEMETRI PASUT & GRAFIK DINAMIS (v4.8 PRO)
+// =========================================================================
+
+function drawRoundedRect(ctx, x, y, w, h, r) {
+    if (typeof ctx.roundRect === 'function') {
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, r);
+        ctx.fill();
+        ctx.stroke();
+        return;
+    }
+    const rad = Math.min(r, Math.abs(w)/2, Math.abs(h)/2);
+    ctx.beginPath();
+    ctx.moveTo(x + rad, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rad);
+    ctx.arcTo(x + w, y + h, x, y + h, rad);
+    ctx.arcTo(x, y + h, x, y, rad);
+    ctx.arcTo(x, y, x + w, y, rad);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+}
+
+function calcTideAtHour(h, modelKey, isSpring) {
+    const mKey = modelKey || TIDE_MODEL_KEY;
+    const model = TIDE_MODELS[mKey] || TIDE_MODELS.campuran_tunggal;
+    const scale = isSpring !== undefined ? (isSpring ? 1.35 : 0.82) : (TIDE_IS_SPRING ? 1.35 : 0.82);
+    
+    let elev = 0;
+    let deriv = 0;
+    
+    model.constituents.forEach(c => {
+        const rad = (c.omega * h - c.g) * (Math.PI / 180);
+        elev += scale * c.A * Math.cos(rad);
+        deriv += -scale * c.A * (c.omega * Math.PI / 180) * Math.sin(rad);
+    });
+    
+    const maxDeriv = 0.28 * scale;
+    const normDeriv = Math.max(-1.0, Math.min(1.0, deriv / maxDeriv));
+    const uTide = 0.04 + 0.82 * Math.abs(normDeriv);
+    
+    let state = 'SLACK';
+    if (deriv > 0.04) {
+        state = 'FLOOD';
+    } else if (deriv < -0.04) {
+        state = 'EBB';
+    } else {
+        state = elev >= 0 ? 'HIGH_SLACK' : 'LOW_SLACK';
+    }
+    
+    const uRiver = 0.25;
+    const currentMonsoon = (typeof MONSOON !== 'undefined') ? MONSOON : 'timur';
+    const uWave = currentMonsoon === 'barat' ? 0.32 : 0.22;
+    const waveAngle = currentMonsoon === 'barat' ? 90 : 270;
+    const riverAngle = 350;
+    const tideAngle = normDeriv > 0.05 ? 170 : (normDeriv < -0.05 ? 350 : 0);
+    const tideWeight = Math.abs(normDeriv);
+
+    const vx = uRiver * Math.sin(riverAngle * Math.PI / 180) +
+               uWave * Math.sin(waveAngle * Math.PI / 180) +
+               uTide * Math.sin(tideAngle * Math.PI / 180) * (tideWeight > 0.05 ? 1 : 0);
+    const vy = uRiver * Math.cos(riverAngle * Math.PI / 180) +
+               uWave * Math.cos(waveAngle * Math.PI / 180) +
+               uTide * Math.cos(tideAngle * Math.PI / 180) * (tideWeight > 0.05 ? 1 : 0);
+
+    const resSpeed = Math.sqrt(vx * vx + vy * vy);
+    const heading = Math.round((Math.atan2(vx, vy) * 180 / Math.PI + 360) % 360);
+
+    let cardinal = 'UTARA';
+    if (heading >= 22.5 && heading < 67.5) cardinal = 'TIMUR LAUT (NE)';
+    else if (heading >= 67.5 && heading < 112.5) cardinal = 'TIMUR (E)';
+    else if (heading >= 112.5 && heading < 157.5) cardinal = 'TENGGARA (SE)';
+    else if (heading >= 157.5 && heading < 202.5) cardinal = 'SELATAN (S)';
+    else if (heading >= 202.5 && heading < 247.5) cardinal = 'BARAT DAYA (SW)';
+    else if (heading >= 247.5 && heading < 292.5) cardinal = 'BARAT (W)';
+    else if (heading >= 292.5 && heading < 337.5) cardinal = 'BARAT LAUT (NW)';
+
+    return {
+        elev,
+        deriv,
+        normDeriv,
+        uTide,
+        state,
+        resSpeed,
+        heading,
+        cardinal
+    };
+}
+
+function initTideCanvas() {
+    const canvas = document.getElementById('tideCanvas');
+    if (!canvas) return;
+    
+    function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        if (!rect || rect.width < 10 || rect.height < 10) return;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        drawTideCanvas();
+    }
+    
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    let isCanvasDragging = false;
+    function scrubFromCanvasEvent(e) {
+        const rect = canvas.getBoundingClientRect();
+        if (!rect || rect.width <= 0) return;
+        const clientX = (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
+        if (clientX === undefined) return;
+        const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
+        const paddingLeft = 34, paddingRight = 14;
+        const plotWidth = Math.max(10, rect.width - paddingLeft - paddingRight);
+        const relX = Math.max(0, Math.min(1, (x - paddingLeft) / plotWidth));
+        const newHour = Math.round(relX * 24 * 4) / 4;
+        updateTideFromTime(newHour, true);
+    }
+
+    canvas.addEventListener('mousedown', (e) => { isCanvasDragging = true; scrubFromCanvasEvent(e); });
+    window.addEventListener('mousemove', (e) => { if (isCanvasDragging) scrubFromCanvasEvent(e); });
+    window.addEventListener('mouseup', () => { isCanvasDragging = false; });
+
+    canvas.addEventListener('touchstart', (e) => { isCanvasDragging = true; scrubFromCanvasEvent(e); }, { passive: true });
+    window.addEventListener('touchmove', (e) => { if (isCanvasDragging) scrubFromCanvasEvent(e); }, { passive: true });
+    window.addEventListener('touchend', () => { isCanvasDragging = false; });
+
+    startTideCanvasLoop();
+}
+
+function startTideCanvasLoop() {
+    if (tideAnimFrameId) cancelAnimationFrame(tideAnimFrameId);
+    function animLoop() {
+        try {
+            const hud = document.getElementById('floatingTideHUD');
+            if (hud && hud.style.display !== 'none' && !hud.classList.contains('hidden')) {
+                drawTideCanvas();
+            }
+        } catch(e) {
+            console.warn('animLoop error:', e);
+        }
+        tideAnimFrameId = requestAnimationFrame(animLoop);
+    }
+    tideAnimFrameId = requestAnimationFrame(animLoop);
+}
+
+function drawTideCanvas() {
+    const canvas = document.getElementById('tideCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const W = canvas.width / dpr;
+    const H = canvas.height / dpr;
+
+    if (W < 40 || H < 30) return;
+
+    ctx.save();
+    try {
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, W, H);
+
+        const padL = 34, padR = 14, padT = 16, padB = 22;
+        const pW = Math.max(10, W - padL - padR);
+        const pH = Math.max(10, H - padT - padB);
+
+        const minElev = -1.25;
+        const maxElev = 1.45;
+        const elevToY = (ev) => padT + pH - ((ev - minElev) / (maxElev - minElev)) * pH;
+        const hourToX = (hr) => padL + (hr / 24) * pW;
+
+        // 1. Grid MSL, HWS, LWS
+        ctx.lineWidth = 1;
+        const yMSL = elevToY(0);
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(padL, yMSL); ctx.lineTo(padL + pW, yMSL); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '9px "JetBrains Mono", monospace';
+        ctx.fillText('0.0 MSL', 2, yMSL + 3);
+
+        const yHWS = elevToY(1.0);
+        ctx.strokeStyle = 'rgba(6, 182, 212, 0.25)';
+        ctx.beginPath(); ctx.moveTo(padL, yHWS); ctx.lineTo(padL + pW, yHWS); ctx.stroke();
+        ctx.fillStyle = '#06b6d4';
+        ctx.fillText('+1.0m', 2, yHWS + 3);
+
+        const yLWS = elevToY(-0.8);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.25)';
+        ctx.beginPath(); ctx.moveTo(padL, yLWS); ctx.lineTo(padL + pW, yLWS); ctx.stroke();
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText('-0.8m', 2, yLWS + 3);
+
+        for (let h = 0; h <= 24; h += 4) {
+            const x = hourToX(h);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+            ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + pH); ctx.stroke();
+            ctx.fillStyle = '#64748b';
+            ctx.font = '8.5px "JetBrains Mono", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${String(h).padStart(2, '0')}:00`, x, H - 6);
+        }
+        ctx.textAlign = 'left';
+
+        // 2. Shading Area Flood vs Ebb
+        const pts = [];
+        const step = 0.1;
+        for (let h = 0; h <= 24.001; h += step) {
+            const res = calcTideAtHour(h);
+            pts.push({ h, x: hourToX(h), y: elevToY(res.elev), elev: res.elev, deriv: res.deriv });
+        }
+
+        for (let i = 0; i < pts.length - 1; i++) {
+            const p1 = pts[i];
+            const p2 = pts[i+1];
+            const isRising = p1.deriv >= 0;
+
+            ctx.beginPath();
+            ctx.moveTo(p1.x, yMSL);
+            ctx.lineTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.lineTo(p2.x, yMSL);
+            ctx.closePath();
+
+            const grad = ctx.createLinearGradient(0, Math.min(p1.y, p2.y), 0, yMSL);
+            if (isRising) {
+                grad.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+                grad.addColorStop(1, 'rgba(16, 185, 129, 0.02)');
+            } else {
+                grad.addColorStop(0, 'rgba(245, 158, 11, 0.35)');
+                grad.addColorStop(1, 'rgba(245, 158, 11, 0.02)');
+            }
+            ctx.fillStyle = grad;
+            ctx.fill();
+        }
+
+        // 3. Kurva Utama Pasut
+        ctx.shadowColor = '#22d3ee';
+        ctx.shadowBlur = 10;
+        ctx.lineWidth = 2.8;
+        ctx.strokeStyle = '#38bdf8';
+        ctx.beginPath();
+        pts.forEach((p, idx) => {
+            if (idx === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+        });
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // 4. Laser Scanning Line
+        const currentX = hourToX(TIDE_HOUR);
+        const curRes = calcTideAtHour(TIDE_HOUR);
+        const currentY = elevToY(curRes.elev);
+
+        ctx.strokeStyle = 'rgba(34, 211, 238, 0.55)';
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(currentX, padT);
+        ctx.lineTo(currentX, padT + pH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 5. Titik Nodal Berjalan Dinamis
+        TIDE_RIPPLE_PHASE = (TIDE_RIPPLE_PHASE + 0.05) % 1;
+        const rippleRadius = Math.max(1, 6 + TIDE_RIPPLE_PHASE * 18);
+        const rippleAlpha = Math.max(0, 1 - TIDE_RIPPLE_PHASE);
+
+        ctx.strokeStyle = `rgba(34, 211, 238, ${rippleAlpha * 0.7})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(currentX, currentY, rippleRadius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        const r2 = Math.max(1, (rippleRadius + 8) % 24);
+        ctx.strokeStyle = `rgba(16, 185, 129, ${(1 - r2/24) * 0.4})`;
+        ctx.beginPath();
+        ctx.arc(currentX, currentY, r2, 0, Math.PI * 2);
+        ctx.stroke();
+
+        const nodeColor = curRes.deriv > 0.04 ? '#10b981' : (curRes.deriv < -0.04 ? '#f59e0b' : '#38bdf8');
+        ctx.shadowColor = nodeColor;
+        ctx.shadowBlur = 14;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(currentX, currentY, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = nodeColor;
+        ctx.beginPath();
+        ctx.arc(currentX, currentY, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // 6. Floating Badge
+        const badgeText = `η: ${curRes.elev >= 0 ? '+' : ''}${curRes.elev.toFixed(2)}m (${curRes.state === 'FLOOD' ? 'PASANG ↑' : (curRes.state === 'EBB' ? 'SURUT ↓' : 'SLACK ⟳')})`;
+        ctx.font = 'bold 9.5px "JetBrains Mono", monospace';
+        const textWidth = ctx.measureText(badgeText).width;
+        
+        let badgeX = currentX - textWidth / 2 - 6;
+        let badgeY = currentY - 26;
+        if (badgeX < padL) badgeX = padL;
+        if (badgeX + textWidth + 12 > W - padR) badgeX = W - padR - textWidth - 12;
+        if (badgeY < padT - 4) badgeY = currentY + 14;
+
+        ctx.fillStyle = 'rgba(6, 15, 30, 0.92)';
+        ctx.strokeStyle = nodeColor;
+        ctx.lineWidth = 1;
+        drawRoundedRect(ctx, badgeX, badgeY, textWidth + 12, 17, 4);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(badgeText, badgeX + 6, badgeY + 12);
+    } catch(err) {
+        console.warn('drawTideCanvas exception:', err);
+    } finally {
+        ctx.restore();
+    }
+}
+
+function updateTideFromTime(hour, syncMap) {
+    TIDE_HOUR = Math.max(0, Math.min(24, parseFloat(hour)));
+    const res = calcTideAtHour(TIDE_HOUR);
+
+    const slider = document.getElementById('slider-tide-time');
+    if (slider && Math.abs(parseFloat(slider.value) - TIDE_HOUR) > 0.05) {
+        slider.value = TIDE_HOUR;
+    }
+
+    const hInt = Math.floor(TIDE_HOUR);
+    const mInt = Math.round((TIDE_HOUR - hInt) * 60);
+    const timeStr = `Jam ${String(hInt).padStart(2, '0')}:${String(mInt).padStart(2, '0')} WIB`;
+    
+    const lbl = document.getElementById('tideHudTimeDisplay');
+    if (lbl) lbl.innerText = timeStr;
+
+    const elevVal = document.getElementById('tideHudElevVal');
+    if (elevVal) elevVal.innerText = `${res.elev >= 0 ? '+' : ''}${res.elev.toFixed(2)} m`;
+
+    const llwlVal = document.getElementById('tideHudLLWL');
+    if (llwlVal) llwlVal.innerText = `+${(res.elev + 0.90).toFixed(2)}m`;
+
+    const stateBadge = document.getElementById('tideHudStateBadge');
+    const phaseIcon = document.getElementById('tidePhaseIcon');
+    if (stateBadge) {
+        if (res.state === 'FLOOD') {
+            stateBadge.className = "px-2 py-0.5 rounded text-[10px] font-black uppercase text-center bg-emerald-950/80 text-emerald-400 border border-emerald-500/60";
+            stateBadge.innerHTML = '<i class="fa-solid fa-arrow-trend-up mr-1"></i> PASANG (FLOOD) ↑';
+            if (phaseIcon) phaseIcon.className = "fa-solid fa-arrow-trend-up text-emerald-400";
+        } else if (res.state === 'EBB') {
+            stateBadge.className = "px-2 py-0.5 rounded text-[10px] font-black uppercase text-center bg-amber-950/80 text-amber-400 border border-amber-500/60";
+            stateBadge.innerHTML = '<i class="fa-solid fa-arrow-trend-down mr-1"></i> SURUT (EBB) ↓';
+            if (phaseIcon) phaseIcon.className = "fa-solid fa-arrow-trend-down text-amber-400";
+        } else {
+            stateBadge.className = "px-2 py-0.5 rounded text-[10px] font-black uppercase text-center bg-cyan-950/80 text-cyan-300 border border-cyan-500/60";
+            stateBadge.innerHTML = res.elev >= 0 ? '<i class="fa-solid fa-water mr-1"></i> PUNCAK PASANG (SLACK)' : '<i class="fa-solid fa-water mr-1"></i> LEMBAH SURUT (SLACK)';
+            if (phaseIcon) phaseIcon.className = "fa-solid fa-arrows-left-right text-cyan-400";
+        }
+    }
+
+    const velVal = document.getElementById('tideHudVelocityVal');
+    if (velVal) velVal.innerText = `${res.uTide.toFixed(2)} m/s`;
+
+    const knotsVal = document.getElementById('tideHudKnotsVal');
+    if (knotsVal) knotsVal.innerText = `${(res.uTide * 1.94384).toFixed(2)} knot (ADCP Lapangan)`;
+
+    const velBar = document.getElementById('tideHudVelBar');
+    if (velBar) {
+        const pct = Math.min(100, Math.round((res.uTide / 0.86) * 100));
+        velBar.style.width = pct + '%';
+        velBar.className = `h-full transition-all duration-300 ${pct > 65 ? 'bg-rose-500' : (pct > 35 ? 'bg-amber-400' : 'bg-cyan-400')}`;
+    }
+
+    const azText = document.getElementById('tideHudAzimuthText');
+    if (azText) azText.innerText = `Heading ${res.heading}° (${res.cardinal})`;
+
+    const needle = document.getElementById('tideCompassNeedle');
+    if (needle) needle.style.transform = `rotate(${res.heading}deg)`;
+
+    const dispMode = document.getElementById('tideHudDispersionMode');
+    const estStatus = document.getElementById('tideHudEstuaryStatus');
+    const currentMonsoon = (typeof MONSOON !== 'undefined') ? MONSOON : 'timur';
+    if (dispMode && estStatus) {
+        if (res.state === 'FLOOD') {
+            dispMode.className = "font-bold text-emerald-300 mb-0.5";
+            dispMode.innerText = "ONSHORE SEDIMENT RETENTION";
+            estStatus.innerText = `Saat pasang (flood), arus pasut bergerak ke darat menahan debit sedimen; partikel mengendap dekat muara Kali Jajar & disaring sabuk mangrove Sayung.`;
+        } else if (res.state === 'EBB') {
+            dispMode.className = "font-bold text-amber-300 mb-0.5";
+            dispMode.innerText = "OFFSHORE PLUME DISPERSAL (EBB JET)";
+            estStatus.innerText = `Saat surut (ebb), gradien hidrolik memicu pancaran estuari (ebb jet) ke laut lepas; plume menjulur luas ${currentMonsoon === 'barat' ? 'terdefleksi ke Timur (Morodemak & Wedung)' : 'terdefleksi ke Barat (Semarang)'}.`;
+        } else {
+            dispMode.className = "font-bold text-cyan-300 mb-0.5";
+            dispMode.innerText = "SLACK WATER EQUILIBRIUM";
+            estStatus.innerText = `Kecepatan arus pasut mendekati nol (slack water). Dispersi sedimen didominasi debit hulu DAS dan difusi turbulen.`;
+        }
+    }
+
+    const miniElev = document.getElementById('miniTideElev');
+    if (miniElev) miniElev.innerText = `${res.elev >= 0 ? '+' : ''}${res.elev.toFixed(2)}m`;
+    const miniPhase = document.getElementById('miniTidePhase');
+    if (miniPhase) {
+        miniPhase.innerText = res.state === 'FLOOD' ? 'FLOOD ↑' : (res.state === 'EBB' ? 'EBB ↓' : 'SLACK ⟳');
+        miniPhase.className = `px-1.5 py-0.2 rounded text-[10px] font-bold border ${res.state === 'FLOOD' ? 'bg-emerald-950 text-emerald-400 border-emerald-500/50' : (res.state === 'EBB' ? 'bg-amber-950 text-amber-400 border-amber-500/50' : 'bg-cyan-950 text-cyan-300 border-cyan-500/50')}`;
+    }
+    const miniTime = document.getElementById('miniTideTime');
+    if (miniTime) miniTime.innerText = `${String(hInt).padStart(2, '0')}:${String(mInt).padStart(2, '0')} WIB`;
+
+    drawTideCanvas();
+
+    if (syncMap) {
+        TIDE_PHASE = TIDE_HOUR / 24;
+        const vd = (document.getElementById('slider-debit')) ? parseInt(document.getElementById('slider-debit').value) : 45;
+        if (window.dynamicMapLayers) {
+            dynamicMapLayers.clearLayers();
+            renderBilateralPlume(vd, TIDE_PHASE);
+        }
+    }
+}
+
+function onTideSliderInput(val) {
+    updateTideFromTime(val, true);
+}
+
+function stepTideHour(delta) {
+    let newH = (TIDE_HOUR + delta) % 24;
+    if (newH < 0) newH += 24;
+    updateTideFromTime(newH, true);
+}
+
+function onTideModelChange(key) {
+    TIDE_MODEL_KEY = key;
+    const model = TIDE_MODELS[key];
+    const badge = document.getElementById('tideFormzahlBadge');
+    if (badge && model) badge.innerText = `F = ${model.formzahl.toFixed(2)}`;
+    updateTideFromTime(TIDE_HOUR, true);
+    toastNotifikasi(`Model Pasut diubah: ${model.name}`, 'fa-water');
+}
+
+function setSpringNeap(isSpring) {
+    TIDE_IS_SPRING = isSpring;
+    const btnS = document.getElementById('btn-tide-spring');
+    const btnN = document.getElementById('btn-tide-neap');
+    if (btnS && btnN) {
+        if (isSpring) {
+            btnS.className = "flex-1 px-2 py-1 bg-cyan-900/60 border border-cyan-400 text-cyan-300 text-[10px] font-mono font-bold rounded hover:bg-cyan-800 transition-colors cursor-pointer text-center";
+            btnN.className = "flex-1 px-2 py-1 bg-slate-900 border border-slate-700 text-slate-400 text-[10px] font-mono font-bold rounded hover:bg-slate-800 transition-colors cursor-pointer text-center";
+        } else {
+            btnN.className = "flex-1 px-2 py-1 bg-cyan-900/60 border border-cyan-400 text-cyan-300 text-[10px] font-mono font-bold rounded hover:bg-cyan-800 transition-colors cursor-pointer text-center";
+            btnS.className = "flex-1 px-2 py-1 bg-slate-900 border border-slate-700 text-slate-400 text-[10px] font-mono font-bold rounded hover:bg-slate-800 transition-colors cursor-pointer text-center";
+        }
+    }
+    updateTideFromTime(TIDE_HOUR, true);
+    toastNotifikasi(`Kondisi astronomis: ${isSpring ? 'Purnama / Spring Tide (Amplitudo Maksimum)' : 'Perbani / Neap Tide (Amplitudo Minimum)'}`, 'fa-moon');
+}
+
+function cycleTideSpeed() {
+    if (TIDE_ANIM_SPEED === 1.0) TIDE_ANIM_SPEED = 2.0;
+    else if (TIDE_ANIM_SPEED === 2.0) TIDE_ANIM_SPEED = 4.0;
+    else TIDE_ANIM_SPEED = 1.0;
+    
+    const btn = document.getElementById('btn-tide-speed');
+    if (btn) btn.innerText = `${TIDE_ANIM_SPEED}x`;
+    toastNotifikasi(`Kecepatan simulasi pasut: ${TIDE_ANIM_SPEED}x`, 'fa-forward');
+}
+
+function toggleTideHUD() {
+    const hud = document.getElementById('floatingTideHUD');
+    const mini = document.getElementById('tideHUDMiniBadge');
+    if (!hud) return;
+    
+    const isHidden = (hud.style.display === 'none' || hud.classList.contains('hidden') || window.getComputedStyle(hud).display === 'none');
+    if (isHidden) {
+        hud.style.display = 'flex';
+        hud.classList.remove('hidden');
+        if (mini) { mini.style.display = 'none'; }
+        setTimeout(() => {
+            initTideCanvas();
+            drawTideCanvas();
+        }, 60);
+        toastNotifikasi('Jendela Telemetri Pasut HUD dibuka', 'fa-water');
+    } else {
+        hud.style.display = 'none';
+        if (mini) { mini.style.display = 'none'; }
+        toastNotifikasi('Jendela Telemetri Pasut HUD ditutup', 'fa-xmark');
+    }
+}
+
+function toggleMinimizeTideHUD() {
+    const hud = document.getElementById('floatingTideHUD');
+    const mini = document.getElementById('tideHUDMiniBadge');
+    if (!hud || !mini) return;
+    
+    const isMiniHidden = (mini.style.display === 'none' || mini.classList.contains('hidden') || window.getComputedStyle(mini).display === 'none');
+    if (isMiniHidden) {
+        hud.style.display = 'none';
+        mini.classList.remove('hidden');
+        mini.style.display = 'flex';
+        toastNotifikasi('HUD pasut diperkecil ke badge melayang', 'fa-window-minimize');
+    } else {
+        mini.style.display = 'none';
+        mini.classList.add('hidden');
+        hud.style.display = 'flex';
+        hud.classList.remove('hidden');
+        setTimeout(() => {
+            initTideCanvas();
+            drawTideCanvas();
+        }, 60);
+        toastNotifikasi('HUD pasut diperbesar ke ukuran penuh', 'fa-expand');
+    }
+}
+
+function resetTideHUDPos() {
+    const hud = document.getElementById('floatingTideHUD');
+    if (!hud) return;
+    hud.style.top = '85px';
+    hud.style.right = '25px';
+    hud.style.left = 'auto';
+    hud.style.bottom = 'auto';
+    toastNotifikasi('Posisi Telemetri HUD direset', 'fa-arrows-to-dot');
+}
+
+function makeElementDraggable(element, handle) {
+    if (!element || !handle) return;
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+    handle.style.touchAction = 'none';
+
+    function dragMouseDown(e) {
+        if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.tagName === 'A' || e.target.closest('a') || e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+        e.preventDefault();
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.addEventListener('mousemove', elementDrag);
+        document.addEventListener('mouseup', closeDragElement);
+    }
+
+    function elementDrag(e) {
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+
+        let newTop = element.offsetTop - pos2;
+        let newLeft = element.offsetLeft - pos1;
+
+        const maxLeft = Math.max(10, window.innerWidth - element.offsetWidth - 8);
+        const maxTop = Math.max(10, window.innerHeight - element.offsetHeight - 8);
+        newLeft = Math.max(8, Math.min(newLeft, maxLeft));
+        newTop = Math.max(8, Math.min(newTop, maxTop));
+
+        element.style.top = newTop + "px";
+        element.style.left = newLeft + "px";
+        element.style.right = "auto";
+        element.style.bottom = "auto";
+    }
+
+    function closeDragElement() {
+        document.removeEventListener('mousemove', elementDrag);
+        document.removeEventListener('mouseup', closeDragElement);
+    }
+
+    function dragTouchStart(e) {
+        if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.tagName === 'A' || e.target.closest('a') || e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+        const touch = e.touches[0];
+        pos3 = touch.clientX;
+        pos4 = touch.clientY;
+        document.addEventListener('touchmove', elementTouchDrag, { passive: false });
+        document.addEventListener('touchend', closeTouchDrag);
+    }
+
+    function elementTouchDrag(e) {
+        if (e.cancelable) e.preventDefault();
+        const touch = e.touches[0];
+        pos1 = pos3 - touch.clientX;
+        pos2 = pos4 - touch.clientY;
+        pos3 = touch.clientX;
+        pos4 = touch.clientY;
+
+        let newTop = element.offsetTop - pos2;
+        let newLeft = element.offsetLeft - pos1;
+
+        const maxLeft = Math.max(10, window.innerWidth - element.offsetWidth - 8);
+        const maxTop = Math.max(10, window.innerHeight - element.offsetHeight - 8);
+        newLeft = Math.max(8, Math.min(newLeft, maxLeft));
+        newTop = Math.max(8, Math.min(newTop, maxTop));
+
+        element.style.top = newTop + "px";
+        element.style.left = newLeft + "px";
+        element.style.right = "auto";
+        element.style.bottom = "auto";
+    }
+
+    function closeTouchDrag() {
+        document.removeEventListener('touchmove', elementTouchDrag);
+        document.removeEventListener('touchend', closeTouchDrag);
+    }
+
+    handle.addEventListener('mousedown', dragMouseDown);
+    handle.addEventListener('touchstart', dragTouchStart, { passive: true });
+}
+
+function toggleTideAnim(){
+    TIDE_ON = !TIDE_ON;
+    const btnMap = document.getElementById('btn-tide-anim');
+    const btnHud = document.getElementById('btn-tide-hud-play');
+    const playIcon = document.getElementById('tideHudPlayIcon');
+    const playText = document.getElementById('tideHudPlayText');
+
+    if (TIDE_ON) {
+        if (btnMap) {
+            btnMap.innerHTML = '<i class="fa-solid fa-pause"></i> STOP ANIMASI PASUT';
+            btnMap.style.borderColor = '#22d3ee';
+            btnMap.style.boxShadow = '0 0 14px rgba(34,211,238,0.55)';
+        }
+        if (playIcon) playIcon.className = "fa-solid fa-pause text-xs";
+        if (playText) playText.innerText = "JEDA PASUT";
+        if (btnHud) btnHud.className = "col-span-2 bg-gradient-to-r from-rose-700 to-amber-700 hover:from-rose-600 hover:to-amber-600 text-white font-bold py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer";
+
+        if (window.dynamicMapLayers && dynamicMapLayers.getLayers().length === 0) {
+            triggerAnalisisAlgoritma();
+        }
+
+        if (TIDE_T) clearInterval(TIDE_T);
+        TIDE_T = setInterval(() => {
+            const deltaH = 0.25 * TIDE_ANIM_SPEED;
+            TIDE_HOUR = (TIDE_HOUR + deltaH) % 24;
+            updateTideFromTime(TIDE_HOUR, true);
+        }, 500);
+
+        toastNotifikasi('Animasi pasut dinamis aktif — nodal grafik berjalan sesuai waktu', 'fa-water');
+    } else {
+        if (TIDE_T) {
+            clearInterval(TIDE_T);
+            TIDE_T = null;
+        }
+        if (btnMap) {
+            btnMap.innerHTML = '<i class="fa-solid fa-water"></i> ANIMASI PASUT';
+            btnMap.style.borderColor = '';
+            btnMap.style.boxShadow = '';
+        }
+        if (playIcon) playIcon.className = "fa-solid fa-play text-xs";
+        if (playText) playText.innerText = "ANIMASIKAN";
+        if (btnHud) btnHud.className = "col-span-2 bg-gradient-to-r from-cyan-700 to-emerald-700 hover:from-cyan-600 hover:to-emerald-600 text-white font-bold py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer";
+
+        toastNotifikasi('Animasi pasut dijeda pada jam ' + TIDE_HOUR.toFixed(2) + ' WIB', 'fa-pause');
+    }
+}
+
+
+let currentTheme = 'dark';
         let currentMapLayer = null;
         let dynamicMapLayers = null;
         let adcpLayerGroup = null;
@@ -1395,13 +2514,19 @@
             const actionButtons = document.getElementById('globalActionButtons');
             const icon = document.getElementById('fullscreenIcon');
 
+            const tideHUD = document.getElementById('floatingTideHUD');
+            const tideMini = document.getElementById('tideHUDMiniBadge');
             if (document.fullscreenElement === mapWrapper || document.webkitFullscreenElement === mapWrapper) {
+                if (tideHUD) mapWrapper.appendChild(tideHUD);
+                if (tideMini) mapWrapper.appendChild(tideMini);
                 mapWrapper.appendChild(chatPanel);
                 mapWrapper.appendChild(actionButtons);
                 icon.className = "fa-solid fa-compress text-xs";
             } else {
                 document.body.appendChild(chatPanel);
                 document.body.appendChild(actionButtons);
+                if (tideHUD) document.body.appendChild(tideHUD);
+                if (tideMini) document.body.appendChild(tideMini);
                 icon.className = "fa-solid fa-expand text-xs";
             }
         }
@@ -1589,24 +2714,51 @@
         }
 
         // ==================== RENDERING SPASIAL-DINAMIS ====================
-// ==================== PLUME DISPERSI BILATERAL v4.2 + ARUS PASUT ====================
-// Adveksi-difusi 2D: ∂C/∂t + u·∂C/∂x = Dx·∂²C/∂x² + Dy·∂²C/∂y² − kd·C
-// Modulasi pasut: u_tide(t) = u_max·sin(2πt/T) — pasang (flood) menekan plume ke arah pantai,
-// surut (ebb) menarik plume menjauh & mengikuti arah drift longshore dominan musim.
+// ==================== PLUME DISPERSI BILATERAL v4.8 PRO ====================
+
 function closePlumeInfoPanel(){ document.getElementById('plumeInfoPanel').classList.add('hidden'); }
+
 function updatePlumeInfoPanel(mo, wKiri, wKanan, ql, tidePhase, uTide){
     const panel = document.getElementById('plumeInfoPanel');
     const body = document.getElementById('plumeInfoBody');
     if (!panel || !body) return;
-    const tide = Math.sin(2 * Math.PI * (tidePhase || 0));
-    const tideRow = TIDE_ON ? `
-        <div class="border-t border-slate-800 pt-2 mt-2">
-            <span class="text-[11px] uppercase text-slate-400 font-bold">Arus Pasang-Surut (aktif)</span><br>
-            <span class="${tide>=0?'text-emerald-300':'text-orange-300'} font-bold text-[13px]"><i class="fa-solid fa-${tide>=0?'water':'arrows-to-dot'}"></i> ${tide>=0?'PASANG (flood → ke pantai)':'SURUT (ebb → ke laut)'}</span><br>
-            u ≈ <b class="text-white text-[14px]">${uTide.toFixed(2)} m/s</b> · fase ${((tidePhase||0)).toFixed(2)}
-        </div>` : '';
+    
+    const tData = calcTideAtHour(TIDE_HOUR);
+    const hInt = Math.floor(TIDE_HOUR);
+    const mInt = Math.round((TIDE_HOUR - hInt) * 60);
+    const timeStr = `Jam ${String(hInt).padStart(2, '0')}:${String(mInt).padStart(2, '0')} WIB`;
+
+    const tideRow = `
+        <div class="border-t border-slate-800 pt-2 mt-2 bg-slate-900/80 p-2 rounded-lg border border-cyan-500/30">
+            <div class="flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase mb-1">
+                <span><i class="fa-solid fa-wave-square text-cyan-400"></i> Telemetri Pasut Real-Time</span>
+                <span class="text-cyan-300 font-mono">${timeStr}</span>
+            </div>
+            <div class="flex items-center justify-between">
+                <span class="${tData.state === 'FLOOD' ? 'text-emerald-300' : (tData.state === 'EBB' ? 'text-amber-300' : 'text-cyan-300')} font-bold text-[12.5px]">
+                    <i class="fa-solid fa-${tData.state === 'FLOOD' ? 'arrow-trend-up' : (tData.state === 'EBB' ? 'arrow-trend-down' : 'arrows-left-right')}"></i> 
+                    ${tData.state === 'FLOOD' ? 'PASANG (Flood → ke pantai)' : (tData.state === 'EBB' ? 'SURUT (Ebb → ke laut)' : 'SLACK WATER')}
+                </span>
+                <span class="font-bold text-white text-[13px]">η = ${tData.elev >= 0 ? '+' : ''}${tData.elev.toFixed(2)} m</span>
+            </div>
+            <div class="text-[11px] text-slate-300 mt-1">
+                Kecepatan arus pasut u ≈ <b class="text-white">${tData.uTide.toFixed(2)} m/s</b> (${(tData.uTide * 1.94).toFixed(1)} knot)
+            </div>
+            <div class="text-[10.5px] text-amber-300 mt-1">
+                <i class="fa-solid fa-compass"></i> Arah Resultan: <b>${tData.heading}° (${tData.cardinal})</b>
+            </div>
+            <div class="mt-2 pt-1 border-t border-slate-800 flex justify-between items-center text-[9.5px]">
+                <button type="button" onclick="toggleTideHUD()" class="text-cyan-400 hover:text-cyan-300 underline font-bold cursor-pointer">
+                    <i class="fa-solid fa-chart-line"></i> Buka Grafik Pasut HUD
+                </button>
+                <a href="https://drive.google.com/drive/folders/1yLgT_a6f35jxaEThoHVdqNSmuNmprdh6?usp=sharing" target="_blank" class="text-blue-400 hover:text-blue-300 underline flex items-center gap-1">
+                    <i class="fa-brands fa-google-drive"></i> G-Drive Riset
+                </a>
+            </div>
+        </div>`;
+
     body.innerHTML = `
-        <div><span class="text-[11px] uppercase text-slate-400 font-bold">Regim Aktif</span><br><b class="text-cyan-300 text-[15px]">${mo.label}</b> <span class="text-slate-300 text-[12px]">(${mo.bulan})</span></div>
+        <div><span class="text-[11px] uppercase text-slate-400 font-bold">Regim Muson Aktif</span><br><b class="text-cyan-300 text-[15px]">${mo.label}</b> <span class="text-slate-300 text-[12px]">(${mo.bulan})</span></div>
         <div class="grid grid-cols-3 gap-1 text-center bg-slate-900/60 rounded-lg py-2">
             <div><span class="text-[10.5px] text-slate-400 block">Hs</span><b class="text-white text-[15px]">${mo.Hs.toFixed(2)}m</b></div>
             <div><span class="text-[10.5px] text-slate-400 block">Tp</span><b class="text-white text-[15px]">${mo.Tp.toFixed(1)}s</b></div>
@@ -1620,118 +2772,113 @@ function updatePlumeInfoPanel(mo, wKiri, wKanan, ql, tidePhase, uTide){
     `;
     panel.classList.remove('hidden');
 }
+
 function renderBilateralPlume(valDebit, tidePhase){
-            const mo = DSS_MONSOON[MONSOON];
-            const tide = Math.sin(2 * Math.PI * (tidePhase || 0));      // −1 (surut) … +1 (pasang)
-            const uTide = 0.55 * Math.abs(tide);                        // kecepatan arus pasut (m/s)
-            const rTide = 1 + 0.14 * Math.max(0, -tide) - 0.05 * Math.max(0, tide);   // surut mengembang, pasang mengempis
-            const shift = tide * mo.driftDir * 7;                       // geser alongshore per arah drift dominan
-            let sedRadius = ((valDebit * 36) + 620) * rTide;
-            if (MONSOON === 'barat') sedRadius *= 1.18;
-            const spread = mo.spread;
-            let sedColor = valDebit > 70 ? '#ef4444' : (valDebit > 40 ? '#f59e0b' : '#10b981');
-            let originLat = -6.824; let originLng = 110.518;
-            const cosLat = Math.cos(originLat * Math.PI/180);
-            const mPerDeg = 111320;
-            const wKiri = mo.wKiri, wKanan = mo.wKanan;
-            const Rkiri  = sedRadius * (0.45 + 0.85*wKiri)  * spread;   // lobus kiri (barat)
-            const Rkanan = sedRadius * (0.45 + 0.85*wKanan) * spread;   // lobus kanan (timur)
+    const mo = DSS_MONSOON[MONSOON];
+    const tData = calcTideAtHour(TIDE_HOUR);
+    const tideFactor = tData.normDeriv;
+    const uTide = tData.uTide;
+    
+    // Saat surut (tideFactor < 0): plume mengembang ke laut lepas; saat pasang mengempis ke arah pantai
+    const rTide = 1 + 0.22 * Math.max(0, -tideFactor) - 0.08 * Math.max(0, tideFactor);
+    const shift = tideFactor * mo.driftDir * 8;
+    let sedRadius = ((valDebit * 36) + 620) * rTide;
+    if (MONSOON === 'barat') sedRadius *= 1.18;
+    const spread = mo.spread;
+    let sedColor = valDebit > 70 ? '#ef4444' : (valDebit > 40 ? '#f59e0b' : '#10b981');
+    let originLat = -6.824; let originLng = 110.518;
+    const cosLat = Math.cos(originLat * Math.PI/180);
+    const mPerDeg = 111320;
+    const wKiri = mo.wKiri, wKanan = mo.wKanan;
+    const Rkiri  = sedRadius * (0.45 + 0.85*wKiri)  * spread;
+    const Rkanan = sedRadius * (0.45 + 0.85*wKanan) * spread;
 
-            // Fungsi: titik polygon lobus (profil radius Gaussian-ish per sudut)
-            const lobePoints = (centerDeg, halfWidth, R) => {
-                const pts = [[originLat, originLng]];
-                for (let a = -halfWidth; a <= halfWidth; a += 2.5) {
-                    const ang = (centerDeg + a) * (Math.PI/180);
-                    const rel = Math.abs(a) / halfWidth;
-                    const rG = R * (0.30 + 0.70 * Math.cos(rel * Math.PI * 0.5));   // profil konsentrasi
-                    pts.push([ originLat + (rG/mPerDeg) * Math.cos(ang),
-                               originLng + (rG/(mPerDeg*cosLat)) * Math.sin(ang) ]);
-                }
-                return pts;
-            };
+    const lobePoints = (centerDeg, halfWidth, R) => {
+        const pts = [[originLat, originLng]];
+        for (let a = -halfWidth; a <= halfWidth; a += 2.5) {
+            const ang = (centerDeg + a) * (Math.PI/180);
+            const rel = Math.abs(a) / halfWidth;
+            const rG = R * (0.30 + 0.70 * Math.cos(rel * Math.PI * 0.5));
+            pts.push([ originLat + (rG/mPerDeg) * Math.cos(ang),
+                       originLng + (rG/(mPerDeg*cosLat)) * Math.sin(ang) ]);
+        }
+        return pts;
+    };
 
-            // --- CINCIN KONSENTRASI per lobus (3 ring: inti pekat → tengah → luaran tipis) ---
-            const drawLobe = (centerDeg, halfWidth, R, weight, sideLabel) => {
-                const rings = [
-                    { f: 1.00, op: 0.07, col: '#38bdf8', dash: '10, 12' },   // luaran (SSC rendah)
-                    { f: 0.62, op: 0.15, col: '#f59e0b', dash: '6, 8'  },    // tengah
-                    { f: 0.32, op: 0.30, col: sedColor, dash: ''      }      // inti (SSC tinggi)
-                ];
-                rings.forEach(rg => {
-                    L.polygon(lobePoints(centerDeg, halfWidth * rg.f + 4, R * rg.f), {
-                        pane: 'dsasPane', color: rg.col, weight: rg.f < 0.5 ? 2.5 : 1.5,
-                        fillColor: rg.col, fillOpacity: rg.op, opacity: 0.8,
-                        dashArray: rg.dash, lineJoin: 'round', className: 'plume-blinking'
-                    }).addTo(dynamicMapLayers);
-                });
-                // Label lobus + estimasi numerik
-                const angL = centerDeg * Math.PI/180;
-                const lblLat = originLat + ((R*0.72)/mPerDeg) * Math.cos(angL);
-                const lblLng = originLng + ((R*0.72)/(mPerDeg*cosLat)) * Math.sin(angL);
-                const areaKm2 = Math.PI * Math.pow(R*spread/1000, 2) * 0.5 * (weight/0.5);
-                const ssc = 28 + valDebit * 1.15 * weight * 2;
-                L.circleMarker([lblLat, lblLng], { pane: 'dsasPane', radius: 5, color: sedColor, fillColor: sedColor, fillOpacity: 0.9 })
-                    .bindTooltip(`<div class="font-mono text-[10px] leading-relaxed"><b class="text-white">${sideLabel}</b><br>Asal: muara Kali Jajar–Tuntang<br>Luas dispersi ≈ <b class="text-amber-300">${areaKm2.toFixed(1)} km²</b><br>SSC inti ≈ <b class="text-orange-300">${Math.round(ssc)} mg/L</b><br>Bobot lobus: <b>${Math.round(weight*100)}%</b> (${mo.label})</div>`,
-                    { direction: 'top', className: 'custom-tooltip' }).addTo(dynamicMapLayers);
-            };
+    const drawLobe = (centerDeg, halfWidth, R, weight, sideLabel) => {
+        const rings = [
+            { f: 1.00, op: 0.07, col: '#38bdf8', dash: '10, 12' },
+            { f: 0.62, op: 0.15, col: '#f59e0b', dash: '6, 8'  },
+            { f: 0.32, op: 0.30, col: sedColor, dash: ''      }
+        ];
+        rings.forEach(rg => {
+            L.polygon(lobePoints(centerDeg, halfWidth * rg.f + 4, R * rg.f), {
+                pane: 'dsasPane', color: rg.col, weight: rg.f < 0.5 ? 2.5 : 1.5,
+                fillColor: rg.col, fillOpacity: rg.op, opacity: 0.8,
+                dashArray: rg.dash, lineJoin: 'round', className: 'plume-blinking'
+            }).addTo(dynamicMapLayers);
+        });
+        const angL = centerDeg * Math.PI/180;
+        const lblLat = originLat + ((R*0.72)/mPerDeg) * Math.cos(angL);
+        const lblLng = originLng + ((R*0.72)/(mPerDeg*cosLat)) * Math.sin(angL);
+        const areaKm2 = Math.PI * Math.pow(R*spread/1000, 2) * 0.5 * (weight/0.5);
+        const ssc = 28 + valDebit * 1.15 * weight * 2;
+        L.circleMarker([lblLat, lblLng], { pane: 'dsasPane', radius: 5, color: sedColor, fillColor: sedColor, fillOpacity: 0.9 })
+            .bindTooltip(`<div class="font-mono text-[10px] leading-relaxed"><b class="text-white">${sideLabel}</b><br>Asal: muara Kali Jajar–Tuntang<br>Luas dispersi ≈ <b class="text-amber-300">${areaKm2.toFixed(1)} km²</b><br>SSC inti ≈ <b class="text-orange-300">${Math.round(ssc)} mg/L</b><br>Bobot lobus: <b>${Math.round(weight*100)}%</b> (${mo.label})</div>`,
+            { direction: 'top', className: 'custom-tooltip' }).addTo(dynamicMapLayers);
+    };
 
-            // Lobus KIRI (BARAT) — dominan saat Musim Timur (drift ke barat)
-            drawLobe(305 + shift, 52 * spread, Rkiri, wKiri, "LOBUS KIRI (BARAT)");
-            // Lobus KANAN (TIMUR) — dominan saat Musim Barat (drift ke timur)
-            drawLobe(55 + shift, 52 * spread, Rkanan, wKanan, "LOBUS KANAN (TIMUR)");
+    drawLobe(305 + shift, 52 * spread, Rkiri, wKiri, "LOBUS KIRI (BARAT)");
+    drawLobe(55 + shift, 52 * spread, Rkanan, wKanan, "LOBUS KANAN (TIMUR)");
 
-            // --- PANAH ANGKUTAN LONGSHORE (arah drift dominan musim) ---
-            const ql = DSSPRO.cerc(mo.Hs, mo.Tp, mo.alphaCERC, 0.39);
-            const domR = mo.domLobe === 'kanan' ? Rkanan : Rkiri;
-            const domAng = mo.domLobe === 'kanan' ? 90 : 270;   // arah drift di sepanjang pantai (timur/barat)
-            const dLat = originLat + ((domR*1.02)/mPerDeg) * Math.cos((mo.domLobe==='kanan'?60:-60)*Math.PI/180) * 0.5;
-            const dLng = originLng + ((domR*1.02)/(mPerDeg*cosLat)) * Math.sin((mo.domLobe==='kanan'?60:-60)*Math.PI/180) * 0.5;
-            const driftIcon = L.divIcon({ html: `<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:${mo.domLobe==='kanan'?'rgba(37,99,235,0.92)':'rgba(8,145,178,0.92)'};border:2px solid #bae6fd;box-shadow:0 0 10px rgba(56,189,248,0.7);color:#fff;font-size:13px;">
-                <i class="fa-solid fa-${mo.domLobe==='kanan'?'arrow-right':'arrow-left'}"></i></div>`, className: 'drift-arrow-pulse', iconSize: [30, 30], iconAnchor: [15, 15] });
-            L.marker([dLat, dLng], { icon: driftIcon, pane: 'stationsPane' })
-                .bindTooltip(`<div class="font-mono text-[10px]"><b class="text-white">LONGSHORE DRIFT</b><br>${mo.drift}<br>Ql(CERC) ≈ ${(ql.Ql_yr/1000).toFixed(0)}rb m³/th</div>`, { direction: 'top', className: 'custom-tooltip' })
-                .addTo(dynamicMapLayers);
+    const ql = DSSPRO.cerc(mo.Hs, mo.Tp, mo.alphaCERC, 0.39);
+    const domR = mo.domLobe === 'kanan' ? Rkanan : Rkiri;
+    const dLat = originLat + ((domR*1.02)/mPerDeg) * Math.cos((mo.domLobe==='kanan'?60:-60)*Math.PI/180) * 0.5;
+    const dLng = originLng + ((domR*1.02)/(mPerDeg*cosLat)) * Math.sin((mo.domLobe==='kanan'?60:-60)*Math.PI/180) * 0.5;
+    const driftIcon = L.divIcon({ html: `<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:${mo.domLobe==='kanan'?'rgba(37,99,235,0.92)':'rgba(8,145,178,0.92)'};border:2px solid #bae6fd;box-shadow:0 0 10px rgba(56,189,248,0.7);color:#fff;font-size:13px;">
+        <i class="fa-solid fa-${mo.domLobe==='kanan'?'arrow-right':'arrow-left'}"></i></div>`, className: 'drift-arrow-pulse', iconSize: [30, 30], iconAnchor: [15, 15] });
+    L.marker([dLat, dLng], { icon: driftIcon, pane: 'stationsPane' })
+        .bindTooltip(`<div class="font-mono text-[10px]"><b class="text-white">LONGSHORE DRIFT</b><br>${mo.drift}<br>Ql(CERC) ≈ ${(ql.Ql_yr/1000).toFixed(0)}rb m³/th</div>`, { direction: 'top', className: 'custom-tooltip' })
+        .addTo(dynamicMapLayers);
 
-            const riverLine = [ [-6.845, 110.535], [-6.838, 110.528], [-6.830, 110.522], [originLat, originLng] ];
-            L.polyline(riverLine, { pane: 'dsasPane', color: sedColor, weight: 5, opacity: 0.9, dashArray: '12, 12', className: 'flowing-river-line' }).addTo(dynamicMapLayers);
+    const riverLine = [ [-6.845, 110.535], [-6.838, 110.528], [-6.830, 110.522], [originLat, originLng] ];
+    L.polyline(riverLine, { pane: 'dsasPane', color: sedColor, weight: 5, opacity: 0.9, dashArray: '12, 12', className: 'flowing-river-line' }).addTo(dynamicMapLayers);
 
-            // --- PARTIKEL VEKTOR: tersebar ke KEDUA lobus sesuai bobot musim ---
-            const particleTotal = valDebit > 60 ? 90 : 50;
-            const emitLobeParticles = (centerDeg, halfWidth, R, weight) => {
-                const cnt = Math.max(6, Math.round(particleTotal * weight));
-                for (let i = 0; i < cnt; i++) {
-                    let angle = centerDeg + (Math.random()*2-1) * halfWidth * spread;
-                    let rad = angle * (Math.PI / 180);
-                    let distanceDeg = Math.random() * (R/mPerDeg) * 1.15;
-                    let startLat = originLat + distanceDeg * Math.cos(rad) * 0.55;
-                    let startLng = originLng + (distanceDeg/cosLat) * Math.sin(rad) * 0.55;
-                    let travelDist = 28 + Math.random() * 42;
-                    let tx = travelDist * Math.cos(rad);
-                    let ty = travelDist * -Math.sin(rad);
-                    let rot = -angle;
-                    let dur = 1.5 + Math.random() * 2;
-                    let del = Math.random() * 2.5;
-                    let iconHtml = `
-                        <div class="vector-particle-wrapper" style="--tx: ${tx}px; --ty: ${ty}px; --dur: ${dur}s; --del: ${del}s;">
-                            <i class="fa-solid fa-arrow-right vector-particle-icon" style="--rot: ${rot}deg; --p-color: ${sedColor};"></i>
-                        </div>`;
-                    let particleIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [24, 24] });
-                    L.marker([startLat, startLng], { icon: particleIcon, interactive: false, pane: 'stationsPane' }).addTo(dynamicMapLayers);
-                }
-            };
-            emitLobeParticles(305 + shift, 52, Rkiri, wKiri);
-            emitLobeParticles(55 + shift, 52, Rkanan, wKanan);
+    const particleTotal = valDebit > 60 ? 90 : 50;
+    const emitLobeParticles = (centerDeg, halfWidth, R, weight) => {
+        const cnt = Math.max(6, Math.round(particleTotal * weight));
+        for (let i = 0; i < cnt; i++) {
+            let angle = centerDeg + (Math.random()*2-1) * halfWidth * spread;
+            let rad = angle * (Math.PI / 180);
+            let distanceDeg = Math.random() * (R/mPerDeg) * 1.15;
+            let startLat = originLat + distanceDeg * Math.cos(rad) * 0.55;
+            let startLng = originLng + (distanceDeg/cosLat) * Math.sin(rad) * 0.55;
+            let travelDist = 28 + Math.random() * 42;
+            let tx = travelDist * Math.cos(rad);
+            let ty = travelDist * -Math.sin(rad);
+            let rot = -angle;
+            let dur = 1.5 + Math.random() * 2;
+            let del = Math.random() * 2.5;
+            let iconHtml = `
+                <div class="vector-particle-wrapper" style="--tx: ${tx}px; --ty: ${ty}px; --dur: ${dur}s; --del: ${del}s;">
+                    <i class="fa-solid fa-arrow-right vector-particle-icon" style="--rot: ${rot}deg; --p-color: ${sedColor};"></i>
+                </div>`;
+            let particleIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [24, 24] });
+            L.marker([startLat, startLng], { icon: particleIcon, interactive: false, pane: 'stationsPane' }).addTo(dynamicMapLayers);
+        }
+    };
+    emitLobeParticles(305 + shift, 52, Rkiri, wKiri);
+    emitLobeParticles(55 + shift, 52, Rkanan, wKanan);
 
-            // --- INTI PLUME (marker visual saja, info lengkap di Panel HUD — tidak ada tooltip permanen) ---
-            L.polygon(lobePoints(0, 14, sedRadius*0.22), {
-                pane: 'dsasPane', color: sedColor, weight: 2, fillColor: sedColor,
-                fillOpacity: 0.35, className: 'plume-blinking'
-            }).addTo(dynamicMapLayers)
-              .bindTooltip(`<div class="font-mono text-[10px]"><b class="text-white">Titik keluaran muara</b><br>Kali Jajar Baru & Tuntang</div>`, { direction: 'top', className: 'custom-tooltip' });
+    L.polygon(lobePoints(0, 14, sedRadius*0.22), {
+        pane: 'dsasPane', color: sedColor, weight: 2, fillColor: sedColor,
+        fillOpacity: 0.35, className: 'plume-blinking'
+    }).addTo(dynamicMapLayers)
+      .bindTooltip(`<div class="font-mono text-[10px]"><b class="text-white">Titik keluaran muara</b><br>Kali Jajar Baru & Tuntang</div>`, { direction: 'top', className: 'custom-tooltip' });
 
-            // --- UPDATE PANEL HUD INFO (v4.3 — anti-overlap, docked di pojok kiri atas) ---
-            updatePlumeInfoPanel(mo, wKiri, wKanan, ql, tidePhase, uTide);
-            }
+    updatePlumeInfoPanel(mo, wKiri, wKanan, ql, tidePhase, uTide);
+}
+
 
         function triggerAnalisisAlgoritma() {
             jalankanSimulasiVensim();
@@ -1752,7 +2899,7 @@ function renderBilateralPlume(valDebit, tidePhase){
                 <h4 class="font-bold text-fuchsia-400 mb-1.5 uppercase flex items-center gap-1.5"><i class="fa-solid fa-satellite-dish"></i> Hasil Render Spasial-Dinamis (v4.3)</h4>
                 <p class="text-slate-300 leading-relaxed">Model adveksi-difusi SSC dari DAS Kali Jajar Baru &amp; Tuntang dirender sebagai <b>plume bilateral dua lobus</b>: lobus kiri (barat, ${Math.round(wKiri*100)}%) dan kanan (timur, ${Math.round(wKanan*100)}%).</p>
                 <p class="text-cyan-300 font-bold mt-2 font-mono text-[11px] bg-slate-950 p-2 rounded border border-slate-800">Regim aktif: <b>${mo.label}</b> (${mo.bulan}) — gelombang ${mo.arah}, Hs=${mo.Hs.toFixed(2)} m, Tp=${mo.Tp.toFixed(1)} s. Angkutan longshore dominan ${mo.drift} dengan Ql(CERC) ≈ ${(ql.Ql_yr/1000).toFixed(0)}rb m³/th.</p>
-                <p class="text-slate-400 mt-2 text-[11px]">Cincin konsentrasi (inti→tengah→luaran) menggambarkan peluruhan Gauss konsentrasi SSC; partikel vektor menunjukkan lintasan adveksi per lobus. Ganti regim lewat toolbar <b class="text-cyan-300">Musim Barat / Musim Timur</b> untuk membandingkan asimetri dispersi. Formula tiap parameter dapat dibuka lewat ikon <i class="fa-solid fa-circle-info text-blue-300"></i> pada panel Simulator Vensim. Aktifkan <b class="text-cyan-300">ANIMASI PASUT</b> (tombol di pojok kiri atas peta) untuk melihat osilasi plume mengikuti arus pasang-surut (u = u_max·sin(2πt/T)). Buka juga <b class="text-indigo-300">GRAFIK PASUT</b> (panel yang bisa digeser) untuk melihat kurva pasut dan node flood/ebb yang berjalan dinamis mengikuti plume per satuan waktu, lengkap dengan pilihan tipe pasut dan slider kurun waktu. Rincian numerik lengkap kini tersedia rapi di <b class="text-white">Panel Info Plume</b> pojok kiri atas peta (klik ✕ untuk menutup).</p>
+                <p class="text-slate-400 mt-2 text-[11px]">Cincin konsentrasi (inti→tengah→luaran) menggambarkan peluruhan Gauss konsentrasi SSC; partikel vektor menunjukkan lintasan adveksi per lobus. Ganti regim lewat toolbar <b class="text-cyan-300">Musim Barat / Musim Timur</b> untuk membandingkan asimetri dispersi. Formula tiap parameter dapat dibuka lewat ikon <i class="fa-solid fa-circle-info text-blue-300"></i> pada panel Simulator Vensim. Aktifkan <b class="text-cyan-300">ANIMASI PASUT</b> (tombol di pojok kiri atas peta) untuk melihat osilasi plume mengikuti arus pasang-surut (u = u_max·sin(2πt/T)). Rincian numerik lengkap kini tersedia rapi di <b class="text-white">Panel Info Plume</b> pojok kiri atas peta (klik ✕ untuk menutup).</p>
             </div>`, "Simulasi spasial-dinamis bilateral berhasil dirender sesuai regim musim aktif.");
         }
 
@@ -1945,6 +3092,7 @@ function renderBilateralPlume(valDebit, tidePhase){
             else if (action === 'data_adcp') userText = "Bagaimana hasil pengukuran arus dan gelombang ADCP Sayung?";
             else if (action === 'skenario_hybrid') userText = "Jelaskan skenario rekomendasi Hybrid Integrated Management.";
             else if (action === 'peneliti') userText = "Siapa tim peneliti dan programmer aplikasi ini?";
+            else if (action === 'telemetri_pasut') userText = "Bagaimana kondisi dinamika pasut dan arah sebaran sedimen saat ini?";
 
             chatBox.innerHTML += `<div class="flex justify-end mt-2"><div class="bg-emerald-700 text-white p-2.5 rounded-l-xl rounded-br-xl text-xs font-bold">${userText}</div></div>`;
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -2032,6 +3180,25 @@ function renderBilateralPlume(valDebit, tidePhase){
                         <p>Mengombinasikan pengendalian debit DAS (45 m³/s), penataan sabuk hijau mangrove (85 Ha), dan kuota pengerukan berbasis Permen KKP 33/2023.</p>
                     </div>`;
                     ttsOutput = "Skenario hybrid merupakan rekomendasi optimal disertasi untuk menjaga kestabilan pesisir Demak.";
+                } else if(action === 'telemetri_pasut') {
+                    const tData = calcTideAtHour(TIDE_HOUR);
+                    const hInt = Math.floor(TIDE_HOUR);
+                    const mInt = Math.round((TIDE_HOUR - hInt) * 60);
+                    const timeStr = `Jam ${String(hInt).padStart(2, '0')}:${String(mInt).padStart(2, '0')} WIB`;
+                    const modelName = TIDE_MODELS[TIDE_MODEL_KEY].name;
+                    reply = `<div class="bg-slate-900 border-l-4 border-cyan-500 p-2.5 rounded text-xs font-mono space-y-1.5">
+                        <h4 class="font-bold text-cyan-400 mb-1 flex items-center gap-1.5"><i class="fa-solid fa-water"></i> Telemetri Pasut &amp; Arah Sebaran Dinamis</h4>
+                        <p>Waktu simulasi saat ini: <b class="text-white">${timeStr}</b> (${modelName}).</p>
+                        <div class="grid grid-cols-2 gap-1.5 text-[11px] bg-slate-950 p-2 rounded border border-slate-800">
+                            <div>Elevasi η: <b class="text-cyan-300">${tData.elev >= 0 ? '+' : ''}${tData.elev.toFixed(2)} m</b></div>
+                            <div>Kecepatan u: <b class="text-white">${tData.uTide.toFixed(2)} m/s</b></div>
+                            <div>Status: <b class="${tData.state==='FLOOD'?'text-emerald-400':(tData.state==='EBB'?'text-amber-400':'text-cyan-400')}">${tData.state}</b></div>
+                            <div>Arah Vektor: <b class="text-amber-300">${tData.heading}° (${tData.cardinal})</b></div>
+                        </div>
+                        <p class="text-[11px] text-slate-300 leading-relaxed">${tData.state === 'FLOOD' ? 'Saat FLOOD, arus pasut bergerak ke arah darat menahan debit sungai (efek backwater) sehingga sedimen terkonsentrasi di dekat muara dan terjebak oleh vegetasi mangrove Sayung.' : (tData.state === 'EBB' ? 'Saat EBB, terjadi pancaran estuari (ebb jet) menuju laut lepas; sedimen suspensi menyebar luas ke lepas pantai terbawa arus longshore.' : 'Kondisi air tenang (slack water); kecepatan arus pasut minimum.')}</p>
+                        <div class="pt-1"><button type="button" onclick="toggleTideHUD()" class="text-cyan-400 hover:text-cyan-300 underline font-bold cursor-pointer"><i class="fa-solid fa-chart-line mr-1"></i> Buka / Geser Jendela Grafik Pasut HUD</button></div>
+                    </div>`;
+                    ttsOutput = `Kondisi pasut pada ${timeStr} tercatat elevasi ${tData.elev.toFixed(2)} meter, kecepatan arus ${tData.uTide.toFixed(2)} meter per detik berstatus ${tData.state}.`;
                 } else if(action === 'peneliti') {
                     reply = `<div class="bg-slate-900 border border-emerald-500 rounded-xl p-3 text-xs font-mono text-center space-y-2">
                         <div class="border-b border-slate-800 pb-2">
@@ -2069,7 +3236,9 @@ function renderBilateralPlume(valDebit, tidePhase){
             input.value = ""; chatBox.scrollTop = chatBox.scrollHeight;
 
             const msgLower = msg.toLowerCase();
-            if(msgLower.includes('formula') || msgLower.includes('rumus') || msgLower.includes('persamaan')) {
+            if(msgLower.includes('pasut') || msgLower.includes('pasang') || msgLower.includes('surut') || msgLower.includes('tide') || msgLower.includes('flood') || msgLower.includes('ebb')) {
+                triggerChatShortcut('telemetri_pasut'); return;
+            } else if(msgLower.includes('formula') || msgLower.includes('rumus') || msgLower.includes('persamaan')) {
                 triggerChatShortcut('formula_matematik'); return;
             } else if(msgLower.includes('adcp') || msgLower.includes('arus') || msgLower.includes('gelombang')) {
                 triggerChatShortcut('data_adcp'); return;
@@ -2216,468 +3385,20 @@ function renderBilateralPlume(valDebit, tidePhase){
         }
 
         // ==================== ONLOAD INITIALIZATION ====================
-        window.onload = () => {
+                window.onload = () => {
             updateMonsoonUI();
             initCharts();
             selectScenarioPreset('hybrid');
             setTimeout(loadVoices, 500);
             initEarth();
+
+            // Inisialisasi Modul Pasut & Telemetri HUD (v4.8 PRO)
+            setTimeout(() => {
+                initTideCanvas();
+                makeElementDraggable(document.getElementById('floatingTideHUD'), document.getElementById('tideHUDDragHandle'));
+                updateTideFromTime(TIDE_HOUR, false);
+            }, 250);
         };
-    </script>
-        <!-- ==================== STUDIO ANALISIS PROFESIONAL v4.0 ==================== -->
-        <div id="studioProModal" class="fixed inset-0 z-[130] hidden bg-slate-950/95 backdrop-blur-md overflow-y-auto">
-            <div class="min-h-full flex flex-col p-2 sm:p-4">
-                <!-- HEADER -->
-                <div class="bg-slate-900 border border-emerald-800/60 rounded-t-2xl p-3 sm:p-4 flex items-center justify-between gap-2 sticky top-0 z-10 shadow-lg shadow-emerald-900/20">
-                    <div class="flex items-center gap-2.5 min-w-0">
-                        <div class="h-9 w-9 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-br from-emerald-600 to-cyan-600 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/30">
-                            <i class="fa-solid fa-microscope text-white text-lg"></i>
-                        </div>
-                        <div class="min-w-0">
-                            <h2 class="font-tech text-sm sm:text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-emerald-400 uppercase tracking-wide truncate">Studio Analisis Profesional</h2>
-                            <p class="text-[10px] sm:text-xs text-slate-400 font-mono truncate">System Dynamics · CERC · Neraca Sedimen · Bruun · AHP-TOPSIS · Monte Carlo · CBA</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-1.5 shrink-0">
-                        <button onclick="DSSPRO.pdf()" class="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-[10px] sm:text-xs font-bold rounded-lg border border-emerald-500 transition-all cursor-pointer whitespace-nowrap"><i class="fa-solid fa-file-pdf mr-1"></i> Laporan PDF</button>
-                        <button onclick="closeStudioPro()" class="h-8 w-8 sm:h-9 sm:w-9 bg-rose-700 hover:bg-rose-600 text-white rounded-lg border border-rose-500 flex items-center justify-center transition-all cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
-                    </div>
-                </div>
-                <!-- TAB BAR -->
-                <div class="bg-slate-900/80 border-x border-b border-slate-800 px-2 py-1.5 flex flex-wrap gap-1.5">
-                    <button id="proTabBtn-cerc" onclick="proSwitchTab('cerc')" class="px-2.5 py-1 rounded bg-emerald-700 text-white font-bold transition-all cursor-pointer text-[11px]"><i class="fa-solid fa-water mr-1"></i> TRANSPORT LONGSHORE</button>
-                    <button id="proTabBtn-budget" onclick="proSwitchTab('budget')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer text-[11px] font-bold"><i class="fa-solid fa-scale-balanced mr-1"></i> NERACA &amp; GARIS PANTAI</button>
-                    <button id="proTabBtn-ahp" onclick="proSwitchTab('ahp')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer text-[11px] font-bold"><i class="fa-solid fa-layer-group mr-1"></i> AHP-TOPSIS</button>
-                    <button id="proTabBtn-mc" onclick="proSwitchTab('mc')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer text-[11px] font-bold"><i class="fa-solid fa-dice mr-1"></i> MONTE CARLO</button>
-                    <button id="proTabBtn-cba" onclick="proSwitchTab('cba')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer text-[11px] font-bold"><i class="fa-solid fa-chart-line mr-1"></i> EKONOMI (CBA)</button>
-                </div>
-                <div class="bg-slate-900/60 border-x border-b border-slate-800 flex-1 p-2 sm:p-4">
-
-                <!-- ===== PANE A: CERC ===== -->
-                <div id="proPane-cerc">
-                    <div class="grid lg:grid-cols-5 gap-3">
-                        <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-3">
-                            <h3 class="text-xs font-bold text-emerald-400 mb-2 font-mono">PARAMETER GELOMBANG (IKLIM ADCP SAYUNG)</h3>
-                            <label class="block text-[10px] text-slate-400 font-mono mt-1">Tinggi gelombang signifikan Hs (m)</label>
-                            <input id="proInHs" type="number" step="0.05" value="0.60" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white font-mono focus:border-emerald-500 outline-none">
-                            <label class="block text-[10px] text-slate-400 font-mono mt-2">Periode puncak Tp (detik)</label>
-                            <input id="proInTp" type="number" step="0.1" value="4.5" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white font-mono focus:border-emerald-500 outline-none">
-                            <label class="block text-[10px] text-slate-400 font-mono mt-2">Sudut datang gelombang α₀ (°)</label>
-                            <input id="proInA0" type="number" step="1" value="15" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white font-mono focus:border-emerald-500 outline-none">
-                            <label class="block text-[10px] text-slate-400 font-mono mt-2">Koefisien CERC K (SPM 0.77 / USACE 0.39)</label>
-                            <input id="proInK" type="number" step="0.01" value="0.77" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white font-mono focus:border-emerald-500 outline-none">
-                            <button onclick="proRunCerc()" class="mt-3 w-full bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg p-2 border border-emerald-500 transition-all cursor-pointer"><i class="fa-solid fa-play mr-1"></i> HITUNG TRANSPORT SEDIMEN</button>
-                        </div>
-                        <div class="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col gap-2">
-                            <h3 class="text-xs font-bold text-emerald-400 font-mono">HASIL REFRASI SNELL + ENERGI BREAKING</h3>
-                            <div id="proCercOut"></div>
-                            <div class="h-[210px] mt-1"><canvas id="proCercChart"></canvas></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ===== PANE B: NERACA ===== -->
-                <div id="proPane-budget" class="hidden">
-                    <div class="grid lg:grid-cols-2 gap-3">
-                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                            <h3 class="text-xs font-bold text-cyan-400 mb-1 font-mono">NERACA SEDIMEN PESISIR (m³/th per km)</h3>
-                            <div class="grid grid-cols-2 gap-2 text-[10px] font-mono text-slate-400">
-                                <div><label>Qs pasokan sungai</label><input id="proNbRiv" type="number" value="13500" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-cyan-500"></div>
-                                <div><label>Ql masuk (barat)</label><input id="proNbQlin" type="number" value="9000" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-cyan-500"></div>
-                                <div><label>Trapping mangrove/struktur</label><input id="proNbTrap" type="number" value="5200" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-cyan-500"></div>
-                                <div><label>Ql keluar (timur)</label><input id="proNbQlout" type="number" value="15500" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-cyan-500"></div>
-                                <div><label>Pengerukan alur Eh</label><input id="proNbDredge" type="number" value="2700" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-cyan-500"></div>
-                                <div><label>Defisit Bruun SLR</label><input id="proNbBruun" type="number" value="7260" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-cyan-500"></div>
-                                <div class="col-span-2"><label>Erosi gelombang Er</label><input id="proNbEr" type="number" value="8600" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-cyan-500"></div>
-                            </div>
-                            <button onclick="proRunBudget()" class="mt-2 w-full bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-bold rounded-lg p-2 border border-cyan-500 transition-all cursor-pointer"><i class="fa-solid fa-play mr-1"></i> HITUNG NERACA</button>
-                            <div id="proNbOut" class="mt-2"></div>
-                            <div class="h-[200px] mt-2"><canvas id="proBudgetChart"></canvas></div>
-                        </div>
-                        <div class="flex flex-col gap-3">
-                            <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                                <h3 class="text-xs font-bold text-amber-400 mb-1 font-mono">BRUUN RULE — RETRET KARENA SLR + SUBSIDEN</h3>
-                                <div class="grid grid-cols-4 gap-1.5 text-[9px] font-mono text-slate-400">
-                                    <div><label>SLR (mm/th)</label><input id="proBrS" type="number" value="12" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-xs text-white outline-none focus:border-amber-500"></div>
-                                    <div><label>L profil (m)</label><input id="proBrL" type="number" value="800" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-xs text-white outline-none focus:border-amber-500"></div>
-                                    <div><label>h* (m)</label><input id="proBrH" type="number" value="12" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-xs text-white outline-none focus:border-amber-500"></div>
-                                    <div><label>B berm (m)</label><input id="proBrB" type="number" value="1.5" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-xs text-white outline-none focus:border-amber-500"></div>
-                                </div>
-                                <button onclick="proRunBudget()" class="mt-2 w-full bg-amber-700 hover:bg-amber-600 text-white text-[11px] font-bold rounded-lg p-1.5 border border-amber-500 transition-all cursor-pointer">HITUNG BRUUN</button>
-                                <div id="proBrOut" class="mt-2 text-xs font-mono"></div>
-                            </div>
-                            <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 flex-1">
-                                <h3 class="text-xs font-bold text-emerald-400 mb-1 font-mono">ONE-LINE MODEL — EVOLUSI GARIS PANTAI (5 KM)</h3>
-                                <div class="grid grid-cols-3 gap-1.5 text-[9px] font-mono text-slate-400">
-                                    <div><label>Ql (ribu m³/th)</label><input id="proOlQl" type="number" value="180" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-xs text-white outline-none focus:border-emerald-500"></div>
-                                    <div><label>Durasi (th)</label><input id="proOlYears" type="number" value="10" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-xs text-white outline-none focus:border-emerald-500"></div>
-                                    <div><label>Posisi groin (m)</label><input id="proOlGroin" type="number" value="2500" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-xs text-white outline-none focus:border-emerald-500"></div>
-                                </div>
-                                <button onclick="proRunBudget()" class="mt-2 w-full bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-bold rounded-lg p-1.5 border border-emerald-500 transition-all cursor-pointer">SIMULASI ONE-LINE</button>
-                                <div class="h-[220px] mt-2"><canvas id="proOnelineChart"></canvas></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ===== PANE C: AHP-TOPSIS ===== -->
-                <div id="proPane-ahp" class="hidden">
-                    <div class="grid lg:grid-cols-2 gap-3">
-                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                            <h3 class="text-xs font-bold text-purple-400 mb-1 font-mono">MATRIKS PERBANDINGAN BERPASANGAN SAATY (5 KRITERIA)</h3>
-                            <div id="proAhpMatrix" class="space-y-1"></div>
-                            <button onclick="proRunAhp()" class="mt-2 w-full bg-purple-700 hover:bg-purple-600 text-white text-xs font-bold rounded-lg p-2 border border-purple-500 transition-all cursor-pointer"><i class="fa-solid fa-play mr-1"></i> HITUNG BOBOT AHP + RANKING TOPSIS</button>
-                            <div id="proAhpOut" class="mt-2"></div>
-                            <div class="h-[200px] mt-2"><canvas id="proAhpChart"></canvas></div>
-                        </div>
-                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                            <h3 class="text-xs font-bold text-emerald-400 mb-1 font-mono">TOPSIS — PERANGKINGAN 4 SKENARIO (BASIS: HASIL SD 2024-2040)</h3>
-                            <div id="proTopsisOut" class="text-xs"></div>
-                            <div class="h-[260px] mt-2"><canvas id="proTopsisChart"></canvas></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ===== PANE D: MONTE CARLO ===== -->
-                <div id="proPane-mc" class="hidden">
-                    <div class="grid lg:grid-cols-2 gap-3">
-                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                            <h3 class="text-xs font-bold text-sky-400 mb-1 font-mono">ANALISIS KETIDAKPASTIAN MONTE CARLO</h3>
-                            <p class="text-[10px] text-slate-500 mb-2 leading-relaxed">Mesin SD dijalankan berulang dengan 4 parameter kunci (debit, restorasi mangrove, pengerukan, kekuatan kebijakan) diacak ±deviasi dari nilai slider saat ini (distribusi segitiga) + noise koefisien model. <b class="text-slate-400">P(IKS&lt;0.45)</b> = persentase simulasi yang jatuh ke kategori KRITIS. Nilai <b class="text-emerald-400">0%</b> berarti skenario ROBUST (aman) pada rentang ketidakpastian ini — bukan galat.</p>
-                            <div class="grid grid-cols-2 gap-2 text-[10px] font-mono text-slate-400">
-                                <div><label>Jumlah iterasi</label><input id="proMcN" type="number" value="1000" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-sky-500"></div>
-                                <div><label>Deviasi parameter (± %)</label><input id="proMcJ" type="number" value="20" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-1.5 text-sm text-white outline-none focus:border-sky-500"></div>
-                            </div>
-                            <button onclick="proRunMC()" class="mt-2 w-full bg-sky-700 hover:bg-sky-600 text-white text-xs font-bold rounded-lg p-2 border border-sky-500 transition-all cursor-pointer"><i class="fa-solid fa-dice mr-1"></i> JALANKAN 1000 ITERASI MONTE CARLO</button>
-                            <div id="proMcOut" class="mt-2"></div>
-                            <div class="h-[220px] mt-2"><canvas id="proMcChart"></canvas></div>
-                        </div>
-                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                            <h3 class="text-xs font-bold text-rose-400 mb-1 font-mono">DIAGRAM TORNADO — SENSITIVITAS SATU-PER-SATU (±15%)</h3>
-                            <div class="h-[420px]"><canvas id="proTornadoChart"></canvas></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ===== PANE E: CBA ===== -->
-                <div id="proPane-cba" class="hidden">
-                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                        <div class="flex items-center justify-between flex-wrap gap-2">
-                            <h3 class="text-xs font-bold text-amber-400 font-mono">COST-BENEFIT ANALYSIS — NPV / BCR / IRR / PAYBACK</h3>
-                            <button onclick="proRunCBA()" class="bg-amber-700 hover:bg-amber-600 text-white text-xs font-bold rounded-lg px-3 py-1.5 border border-amber-500 transition-all cursor-pointer"><i class="fa-solid fa-play mr-1"></i> HITUNG CBA 4 SKENARIO</button>
-                        </div>
-                        <div id="proCbaOut" class="mt-2"></div>
-                        <div class="h-[280px] mt-3"><canvas id="proCbaChart"></canvas></div>
-                    </div>
-                </div>
-
-                </div>
-                <div class="bg-slate-900 border-x border-b border-emerald-800/60 rounded-b-2xl p-2 text-center">
-                    <p class="text-[9px] text-slate-400 font-mono">© 2026 DSS Sedimen Pro v4.8 Professional — Disertasi S3 Teknik Sipil UNDIP (Yusuf Hadi Nugroho) | Pengembang: <b class="text-emerald-400">Ir. Mohamad Hartadi</b> — Civil Engineer &amp; AI System Developer | FB: m.hartadi · Blog: newbieonline7.blogspot.com · WA: 0822-3103-6047</p>
-                </div>
-            </div>
-        </div>
-
-<script>
-// ============================================================
-// DSS SEDIMEN PRO v4.0 — STUDIO ANALISIS PROFESIONAL (Bagian 1)
-// Mesin System Dynamics kopel + Transport Longshore CERC
-// Basis: Disertasi S3 Teknik Sipil UNDIP (Yusuf Hadi Nugroho)
-// Pengembang: Ir. Mohamad Hartadi — Civil Engineer & AI System Developer
-// ============================================================
-// ==================== REGIM MUSIM (v4.1) ====================
-// Musim Barat (Nov-Mar): gelombang dari Barat Laut, energi tinggi, longshore drift ke TIMUR.
-// Musim Timur (Jun-Sep): gelombang dari Timur Laut, energi lebih rendah, drift ke BARAT.
-const DSS_MONSOON = {
-  barat: {
-    label: "Musim Barat", bulan: "November–Maret", Hs: 1.90, Tp: 7.2, alpha0: 315, alphaCERC: 45,
-    arah: "dari Barat Laut (315°)", fEw: 1.35, fLs: 1.30, spread: 0.85,
-    drift: "ke TIMUR (lobus kanan muara)", driftDir: 1, domLobe: "kanan",
-    wKiri: 0.34, wKanan: 0.66
-  },
-  timur: {
-    label: "Musim Timur", bulan: "Juni–September", Hs: 1.15, Tp: 5.4, alpha0: 45, alphaCERC: 45,
-    arah: "dari Timur Laut (45°)", fEw: 0.85, fLs: 0.75, spread: 1.25,
-    drift: "ke BARAT (lobus kiri muara)", driftDir: -1, domLobe: "kiri",
-    wKiri: 0.66, wKanan: 0.34
-  }
-};
-let MONSOON = 'timur';
-let TIDE_ON = false, TIDE_T = null, TIDE_PHASE = 0;
-function toggleTideAnim(){
-    TIDE_ON = !TIDE_ON;
-    const btn = document.getElementById('btn-tide-anim');
-    const vd = () => parseInt(document.getElementById('slider-debit').value);
-    if (TIDE_ON) {
-        btn.innerHTML = '<i class="fa-solid fa-pause"></i> STOP ANIMASI PASUT';
-        btn.style.borderColor = '#22d3ee'; btn.style.boxShadow = '0 0 14px rgba(34,211,238,0.55)';
-        if (window.dynamicMapLayers && dynamicMapLayers.getLayers().length === 0) triggerAnalisisAlgoritma();
-        TIDE_T = setInterval(() => {
-            TIDE_PHASE = (TIDE_PHASE + 0.055) % 1;
-            dynamicMapLayers.clearLayers();
-            renderBilateralPlume(vd(), TIDE_PHASE);
-            syncTideChart();
-        }, 700);
-        toastNotifikasi('Animasi arus pasang-surut aktif — plume berosilasi mengikuti fase tide', 'fa-water');
-    } else {
-        clearInterval(TIDE_T); TIDE_T = null; TIDE_PHASE = 0;
-        btn.innerHTML = '<i class="fa-solid fa-water"></i> ANIMASI PASUT';
-        btn.style.borderColor = ''; btn.style.boxShadow = '';
-        dynamicMapLayers.clearLayers();
-        renderBilateralPlume(vd(), 0);
-        syncTideChart();
-        toastNotifikasi('Animasi pasut dihentikan — plume kembali ke kondisi netral (slack water)', 'fa-water');
-    }
-}
-
-/* ================= GRAFIK PASUT DINAMIS (v4.8 — draggable tide chart) ================= */
-/* Tipe pasut & amplitudo harmonik (m, relatif MSL). Default: campuran condong harian tunggal
-   (khas Pantura Jawa / Morodemak). Ref data: folder Google Drive "Morodemak" (PASUT, RBR-Tide). */
-const TIDE_HARMONICS = {
-  semi:     { A_M2:0.28, A_S2:0.08, A_K1:0.05, A_O1:0.03, T:12.42, F:0.36, nama:'SEMI-DIURNAL',  ket:'2 pasang-surut/hari (M2+S2 dominan)' },
-  campsemi: { A_M2:0.19, A_S2:0.05, A_K1:0.15, A_O1:0.09, T:12.42, F:0.96, nama:'CAMP. SEMI',    ket:'Campuran condong semi-diurnal' },
-  campdiur: { A_M2:0.12, A_S2:0.04, A_K1:0.22, A_O1:0.13, T:24.84, F:2.19, nama:'CAMP. DIURNAL', ket:'Campuran condong harian tunggal (Morodemak)' },
-  diurnal:  { A_M2:0.04, A_S2:0.01, A_K1:0.30, A_O1:0.17, T:24.84, F:9.40, nama:'DIURNAL',       ket:'Harian tunggal (K1+O1 dominan)' }
-};
-let TIDE_TYPE = 'campdiur';      // tipe pasut aktif (default Morodemak)
-let TIDE_CYCLES = 2;              // jumlah siklus dominan yang ditampilkan
-let TIDE_CHART_OPEN = false, TIDE_PANEL_MIN = false;
-
-function tideEta(t, h){
-  return h.A_M2 * Math.cos(2*Math.PI*t/12.42) + h.A_S2 * Math.cos(2*Math.PI*t/12.00)
-       + h.A_K1 * Math.cos(2*Math.PI*t/23.93) + h.A_O1 * Math.cos(2*Math.PI*t/25.82);
-}
-function tidePhaseToHour(ph){ return (ph||0) * TIDE_HARMONICS[TIDE_TYPE].T; }
-function tideHourToPhase(hrs){ return ((hrs / TIDE_HARMONICS[TIDE_TYPE].T) % 1 + 1) % 1; }
-function tideSlope(t){ return (tideEta(t+0.05, TIDE_HARMONICS[TIDE_TYPE]) - tideEta(t-0.05, TIDE_HARMONICS[TIDE_TYPE])) / 0.1; }
-function tideWindowHours(){ return TIDE_CYCLES * TIDE_HARMONICS[TIDE_TYPE].T; }
-function tideVD(){ const el = document.getElementById('slider-debit'); return el ? parseInt(el.value) : 40; }
-
-function renderTideTypeChips(){
-  const box = document.getElementById('tideTypeChips'); if(!box) return;
-  box.innerHTML = '';
-  Object.entries(TIDE_HARMONICS).forEach(([k,h])=>{
-    const b = document.createElement('button');
-    b.className = 'px-2 py-1 rounded-md text-[11px] font-mono font-black border transition-all cursor-pointer ' +
-      (k===TIDE_TYPE ? 'bg-cyan-600/30 border-cyan-400 text-cyan-200 shadow-[0_0_10px_rgba(34,211,238,0.45)]'
-                     : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-cyan-600 hover:text-cyan-300');
-    b.textContent = h.nama; b.title = h.ket + ' — Formzahl F ≈ ' + h.F.toFixed(1);
-    b.onclick = ()=>{ TIDE_TYPE = k; renderTideTypeChips(); renderTideWindowChips(); updateTideScrub(); drawTideChart(); updateTideStatus();
-      toastNotifikasi('Tipe pasut: ' + h.nama + ' — ' + h.ket, 'fa-chart-line'); };
-    box.appendChild(b);
-  });
-}
-function renderTideWindowChips(){
-  const box = document.getElementById('tideWindowChips'); if(!box) return;
-  box.innerHTML = '';
-  [1,2,4].forEach(c=>{
-    const b = document.createElement('button');
-    b.className = 'px-2 py-1 rounded-md text-[11px] font-mono font-black border transition-all cursor-pointer ' +
-      (c===TIDE_CYCLES ? 'bg-indigo-600/30 border-indigo-400 text-indigo-200 shadow-[0_0_10px_rgba(129,140,248,0.45)]'
-                       : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-indigo-500 hover:text-indigo-300');
-    b.textContent = c + '× (' + (c*TIDE_HARMONICS[TIDE_TYPE].T).toFixed(0) + 'j)';
-    b.title = 'Tampilkan ' + c + ' siklus pasut dominan';
-    b.onclick = ()=>{ TIDE_CYCLES = c; renderTideWindowChips(); updateTideScrub(); drawTideChart(); updateTideStatus(); };
-    box.appendChild(b);
-  });
-}
-function updateTideScrub(){
-  const sl = document.getElementById('tideScrub'); const lb = document.getElementById('tideScrubLabel');
-  if(!sl || !lb) return;
-  sl.max = tideWindowHours().toFixed(2);
-  const tNow = tidePhaseToHour(TIDE_PHASE);
-  sl.value = Math.min(tNow, parseFloat(sl.max));
-  lb.textContent = tNow.toFixed(2) + ' jam';
-}
-function scrubTide(v){
-  const h = parseFloat(v);
-  TIDE_PHASE = tideHourToPhase(h);
-  if (window.dynamicMapLayers && (TIDE_ON || dynamicMapLayers.getLayers().length > 0)) {
-    dynamicMapLayers.clearLayers();
-    renderBilateralPlume(tideVD(), TIDE_PHASE);
-  }
-  updateTideScrub(); drawTideChart(); updateTideStatus();
-}
-function tidePhaseInfo(){
-  const h = TIDE_HARMONICS[TIDE_TYPE];
-  const t = tidePhaseToHour(TIDE_PHASE);
-  const eta = tideEta(t, h);
-  const slope = tideSlope(t);
-  const u = 0.55 * Math.abs(Math.sin(2 * Math.PI * TIDE_PHASE));   // konsisten dgn model plume
-  let fase = 'SLACK', arah = 'arus minimum — plume simetris (slack water)';
-  if (slope > 0.02) { fase = 'FLOOD'; arah = 'sebaran terdorong ke muara/darat — plume mengempis & bergeser alongshore'; }
-  else if (slope < -0.02) { fase = 'EBB'; arah = 'sebaran meluas ke laut (lepas pantai) — plume mengembang ±14%'; }
-  return { t, eta, slope, u, fase, arah };
-}
-function updateTideStatus(){
-  const box = document.getElementById('tideStatus'); if(!box) return;
-  const d = tidePhaseInfo();
-  const mo = (window.DSS_MONSOON && DSS_MONSOON[MONSOON]) ? DSS_MONSOON[MONSOON] : null;
-  let badge = '';
-  if (d.fase === 'FLOOD') badge = '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-600/25 border border-emerald-400/60 text-emerald-300 text-[12.5px] font-black font-mono"><i class="fa-solid fa-water"></i> PASANG (FLOOD) ↗</span>';
-  else if (d.fase === 'EBB') badge = '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-orange-600/25 border border-orange-400/60 text-orange-300 text-[12.5px] font-black font-mono"><i class="fa-solid fa-arrows-to-dot"></i> SURUT (EBB) ↘</span>';
-  else badge = '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-700/40 border border-slate-500/60 text-slate-200 text-[12.5px] font-black font-mono"><i class="fa-solid fa-equals"></i> SLACK (PUNCAK/LEMBAH)</span>';
-  const arahColor = d.fase==='FLOOD' ? 'text-emerald-200' : (d.fase==='EBB' ? 'text-orange-200' : 'text-slate-300');
-  box.innerHTML = `
-    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[13px] text-slate-300">
-      <span>t = <b class="text-white text-[14.5px]">${d.t.toFixed(2)} j</b></span>
-      <span>η = <b class="${d.eta>=0?'text-cyan-300':'text-amber-300'} text-[14.5px]">${(d.eta>=0?'+':'')+d.eta.toFixed(2)} m</b></span>
-      <span>u = <b class="text-white text-[14.5px]">${d.u.toFixed(2)} m/s</b></span>
-    </div>
-    <div class="flex flex-wrap items-center gap-2">${badge}<span class="${arahColor} text-[13px] leading-snug font-medium">${d.arah}</span></div>
-    ${mo ? `<div class="text-[11.5px] font-mono text-slate-400">Drift musim aktif: <b class="text-amber-300">${mo.drift}</b> — geser alongshore plume mengikuti ${d.fase==='FLOOD'?'pasang':'surut'} × arah drift.</div>` : ''}
-  `;
-}
-function drawTideChart(){
-  const cv = document.getElementById('tideCanvas'); if(!cv) return;
-  const ctx = cv.getContext ? cv.getContext('2d') : null; if(!ctx) return;
-  const h = TIDE_HARMONICS[TIDE_TYPE];
-  const dpr = window.devicePixelRatio || 1;
-  const W = cv.clientWidth || 340, H = cv.clientHeight || 168;
-  if (cv.width !== Math.round(W*dpr) || cv.height !== Math.round(H*dpr)) { cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr); }
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,W,H);
-  const mL=36, mR=10, mT=10, mB=20;
-  const pw = Math.max(10, W-mL-mR), phH = Math.max(10, H-mT-mB);
-  const tMax = tideWindowHours();
-  const amps = h.A_M2 + h.A_S2 + h.A_K1 + h.A_O1;
-  const yMax = Math.ceil((amps + 0.06) * 20) / 20;
-  const X = t => mL + (t/tMax) * pw;
-  const Y = v => mT + (1 - (v + yMax) / (2*yMax)) * phH;
-  // latar
-  const bg = ctx.createLinearGradient(0,0,0,H);
-  bg.addColorStop(0,'#020617'); bg.addColorStop(1,'#0b1230');
-  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
-  // arsir FLOOD (naik, cyan) / EBB (turun, amber)
-  const N = 240; let prevV = tideEta(0,h);
-  const stepT = tMax/N;
-  for(let i=1;i<=N;i++){
-    const t = tMax*i/N, v = tideEta(t,h);
-    ctx.fillStyle = v >= prevV ? 'rgba(34,211,238,0.10)' : 'rgba(251,146,60,0.10)';
-    ctx.fillRect(X(t-stepT), mT, pw/N+1.2, phH);
-    prevV = v;
-  }
-  // grid & sumbu
-  ctx.font = '10px JetBrains Mono, monospace';
-  ctx.strokeStyle = 'rgba(148,163,184,0.20)'; ctx.lineWidth = 1; ctx.fillStyle = '#64748b';
-  for(let yy = -yMax; yy <= yMax + 1e-9; yy += yMax/2){
-    ctx.beginPath(); ctx.moveTo(mL, Y(yy)); ctx.lineTo(W-mR, Y(yy)); ctx.stroke();
-    ctx.fillText(yy.toFixed(1), 3, Y(yy)+3);
-  }
-  ctx.fillStyle = '#94a3b8'; ctx.fillText('m MSL', 3, mT-1);
-  const tStep = tMax > 40 ? 12 : (tMax > 20 ? 6 : 3);
-  ctx.fillStyle = '#64748b';
-  for(let t = 0; t <= tMax; t += tStep){
-    ctx.strokeStyle = 'rgba(148,163,184,0.10)';
-    ctx.beginPath(); ctx.moveTo(X(t), mT); ctx.lineTo(X(t), mT+phH); ctx.stroke();
-    ctx.fillText(t.toFixed(0)+'j', X(t)-6, H-6);
-  }
-  // garis MSL
-  ctx.strokeStyle = 'rgba(34,211,238,0.45)'; ctx.setLineDash([4,4]);
-  ctx.beginPath(); ctx.moveTo(mL, Y(0)); ctx.lineTo(W-mR, Y(0)); ctx.stroke(); ctx.setLineDash([]);
-  // penanda HW / LW (puncak & lembah)
-  let pSlope = tideSlope(0);
-  for(let t = 0.1; t <= tMax; t += 0.1){
-    const sl = tideSlope(t);
-    if (pSlope > 0 && sl <= 0){
-      ctx.fillStyle = '#22d3ee'; ctx.beginPath(); ctx.arc(X(t-0.05), Y(tideEta(t-0.05,h)), 2.5, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = 'rgba(34,211,238,0.85)'; ctx.fillText('HW', X(t-0.05)-7, Y(tideEta(t-0.05,h))-6);
-    } else if (pSlope < 0 && sl >= 0){
-      ctx.fillStyle = '#fb923c'; ctx.beginPath(); ctx.arc(X(t-0.05), Y(tideEta(t-0.05,h)), 2.5, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = 'rgba(251,146,60,0.85)'; ctx.fillText('LW', X(t-0.05)-7, Y(tideEta(t-0.05,h))+14);
-    }
-    pSlope = sl;
-  }
-  // kurva pasut (gradasi neon + glow)
-  const grad = ctx.createLinearGradient(mL, 0, W-mR, 0);
-  grad.addColorStop(0, '#22d3ee'); grad.addColorStop(0.5, '#818cf8'); grad.addColorStop(1, '#22d3ee');
-  ctx.strokeStyle = grad; ctx.lineWidth = 2.2;
-  ctx.shadowColor = 'rgba(34,211,238,0.65)'; ctx.shadowBlur = 9;
-  ctx.beginPath();
-  for(let i=0;i<=N;i++){ const t = tMax*i/N, y = Y(tideEta(t,h)); if(i===0) ctx.moveTo(X(t),y); else ctx.lineTo(X(t),y); }
-  ctx.stroke(); ctx.shadowBlur = 0;
-  // NODE DINAMIS: posisi waktu saat ini (driven TIDE_PHASE, sinkron plume)
-  const tNode = tidePhaseToHour(TIDE_PHASE);
-  const pulse = 1 + 0.25 * Math.sin((Date.now()%1200)/1200 * 2*Math.PI);
-  for(let k=1; k*TIDE_HARMONICS[TIDE_TYPE].T + tNode <= tMax; k++){   // jejak siklus berikutnya (ghost)
-    const tg = k*TIDE_HARMONICS[TIDE_TYPE].T + tNode;
-    ctx.fillStyle = 'rgba(129,140,248,0.28)';
-    ctx.beginPath(); ctx.arc(X(tg), Y(tideEta(tg,h)), 4, 0, Math.PI*2); ctx.fill();
-  }
-  // garis pemindai vertikal
-  ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(X(tNode), mT); ctx.lineTo(X(tNode), mT+phH); ctx.stroke();
-  // node utama berdenyut
-  ctx.shadowColor = 'rgba(34,211,238,0.9)'; ctx.shadowBlur = 14;
-  ctx.fillStyle = '#22d3ee';
-  ctx.beginPath(); ctx.arc(X(tNode), Y(tideEta(tNode,h)), 5*pulse, 0, Math.PI*2); ctx.fill();
-  ctx.shadowBlur = 0; ctx.fillStyle = '#ffffff';
-  ctx.beginPath(); ctx.arc(X(tNode), Y(tideEta(tNode,h)), 2.2, 0, Math.PI*2); ctx.fill();
-  // label node
-  const dI = tidePhaseInfo();
-  const nodeCol = dI.fase==='FLOOD' ? '#34d399' : (dI.fase==='EBB' ? '#fb923c' : '#e2e8f0');
-  ctx.fillStyle = nodeCol; ctx.font = 'bold 10px JetBrains Mono, monospace';
-  ctx.fillText(dI.fase, Math.min(X(tNode)+8, W-46), Math.max(mT+10, Y(tideEta(tNode,h))-10));
-}
-function syncTideChart(){
-  if (!TIDE_CHART_OPEN) return;
-  updateTideScrub(); drawTideChart(); updateTideStatus();
-}
-function openTideChart(){
-  const p = document.getElementById('tideChartPanel'); if(!p) return;
-  p.classList.remove('hidden');
-  TIDE_CHART_OPEN = true; TIDE_PANEL_MIN = false;
-  const body = document.getElementById('tideChartBody'); if(body) body.classList.remove('hidden');
-  const mb = document.getElementById('tideMinBtn'); if(mb) mb.innerHTML = '<i class="fa-solid fa-minus"></i>';
-  try {
-    const pos = JSON.parse(localStorage.getItem('tidePanelPos') || 'null');
-    if (pos && pos.left && pos.top){
-      p.style.left = pos.left; p.style.top = pos.top; p.style.right = 'auto'; p.style.bottom = 'auto';
-    }
-  } catch(e){}
-  renderTideTypeChips(); renderTideWindowChips(); updateTideScrub(); drawTideChart(); updateTideStatus();
-  toastNotifikasi('Grafik pasut aktif — node flood/ebb bergerak mengikuti plume. Panel bisa digeser lewat judulnya.', 'fa-chart-line');
-}
-function closeTideChart(){
-  const p = document.getElementById('tideChartPanel'); if(p) p.classList.add('hidden');
-  TIDE_CHART_OPEN = false;
-}
-function tideChartMinimize(){
-  const body = document.getElementById('tideChartBody'); const mb = document.getElementById('tideMinBtn');
-  if(!body || !mb) return;
-  TIDE_PANEL_MIN = !TIDE_PANEL_MIN;
-  if (TIDE_PANEL_MIN) { body.classList.add('hidden'); mb.innerHTML = '<i class="fa-solid fa-plus"></i>'; }
-  else { body.classList.remove('hidden'); mb.innerHTML = '<i class="fa-solid fa-minus"></i>'; drawTideChart(); }
-}
-function makeTidePanelDraggable(){
-  const panel = document.getElementById('tideChartPanel');
-  const head = document.getElementById('tideChartHead');
-  if(!panel || !head) return;
-  let dragging = false, sx = 0, sy = 0, px = 0, py = 0;
-  head.addEventListener('pointerdown', e => {
-    if (e.target.closest('button') || e.target.closest('a')) return;
-    dragging = true;
-    const r = panel.getBoundingClientRect();
-    px = r.left; py = r.top; sx = e.clientX; sy = e.clientY;
-    head.setPointerCapture(e.pointerId);
-    head.style.cursor = 'grabbing';
-  });
-  head.addEventListener('pointermove', e => {
-    if(!dragging) return;
-    let nx = px + (e.clientX - sx), ny = py + (e.clientY - sy);
-    nx = Math.max(4, Math.min(window.innerWidth - 70, nx));
-    ny = Math.max(4, Math.min(window.innerHeight - 36, ny));
-    panel.style.left = nx + 'px'; panel.style.top = ny + 'px';
-    panel.style.right = 'auto'; panel.style.bottom = 'auto';
-  });
-  head.addEventListener('pointerup', () => {
-    if(!dragging) return;
-    dragging = false; head.style.cursor = 'move';
-    try { localStorage.setItem('tidePanelPos', JSON.stringify({ left: panel.style.left, top: panel.style.top })); } catch(e){}
-  });
-}
-if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', makeTidePanelDraggable); }
-else { makeTidePanelDraggable(); }
 
 function setMonsoon(m){
   MONSOON = m; updateMonsoonUI();
@@ -3615,7 +4336,8 @@ DSSPRO.pdf = function(){
     window.DSSPRO_speak && window.DSSPRO_speak("Laporan analisis profesional telah diekspor sebagai P D F.");
   });
 };
-
 </script>
+        
+
 </body>
 </html>
