@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSS Sedimen Pro v4.6 Professional — Sistem Keputusan Pengelolaan Sedimen Pesisir (Disertasi S3 Teknik Sipil UNDIP)</title>
+    <title>DSS Sedimen Pro v4.7 Professional — Sistem Keputusan Pengelolaan Sedimen Pesisir (Disertasi S3 Teknik Sipil UNDIP)</title>
     
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
@@ -163,7 +163,7 @@
                     </div>
                     <h1 id="mainAppTitle" class="font-tech text-lg md:text-xl lg:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-emerald-400 leading-tight uppercase mt-1">
                         SISTEM PENGELOLAAN SEDIMEN PESISIR BERKELANJUTAN (DSS)
-                     <span class="text-emerald-400 text-[0.6em] align-top">v4.6 PRO</span></h1>
+                     <span class="text-emerald-400 text-[0.6em] align-top">v4.7 PRO</span></h1>
                     <p class="text-xs font-mono text-[var(--text-muted)] mt-1 uppercase tracking-wider flex items-center gap-2 font-bold">
                         <span id="sync-status-dot" class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-bounce"></span> 
                         <span id="sync-status-text">Integrasi Spasial-Dinamis (MIKE21 & VENSIM) Terkalibrasi Data Lapangan</span>
@@ -474,7 +474,7 @@
                     <div class="space-y-3 bg-slate-950/70 p-3 rounded-xl border border-slate-800 text-xs font-mono">
                         <div>
                             <div class="flex justify-between font-bold text-blue-400 mb-1">
-                                <span><i class="fa-solid fa-faucet-drip"></i> DEBIT SUNGAI (Qr) <button onclick="openParamInfo('debit')" class="ml-1 text-blue-300 hover:text-blue-100 text-[10px] cursor-pointer" title="Formula & penjelasan parameter"><i class="fa-solid fa-circle-info"></i></button></span>
+                                <span><i class="fa-solid fa-faucet-drip"></i> DEBIT SUNGAI (Qr) <button onclick="openParamInfo('debit')" class="ml-1 text-blue-300 hover:text-blue-100 text-[13px] cursor-pointer" title="Formula & penjelasan parameter"><i class="fa-solid fa-circle-info"></i></button></span>
                                 <span id="lbl-debit" class="text-white">45 m³/s</span>
                             </div>
                             <input type="range" id="slider-debit" min="10" max="100" value="45" oninput="onSliderChange()" class="w-full accent-blue-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg">
@@ -482,7 +482,7 @@
 
                         <div>
                             <div class="flex justify-between font-bold text-emerald-400 mb-1">
-                                <span><i class="fa-solid fa-tree"></i> REHAB MANGROVE (M) <button onclick="openParamInfo('mangrove')" class="ml-1 text-emerald-300 hover:text-emerald-100 text-[10px] cursor-pointer" title="Formula & penjelasan parameter"><i class="fa-solid fa-circle-info"></i></button></span>
+                                <span><i class="fa-solid fa-tree"></i> REHAB MANGROVE (M) <button onclick="openParamInfo('mangrove')" class="ml-1 text-emerald-300 hover:text-emerald-100 text-[13px] cursor-pointer" title="Formula & penjelasan parameter"><i class="fa-solid fa-circle-info"></i></button></span>
                                 <span id="lbl-mangrove" class="text-white">75%</span>
                             </div>
                             <input type="range" id="slider-mangrove" min="0" max="100" value="75" oninput="onSliderChange()" class="w-full accent-emerald-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg">
@@ -490,7 +490,7 @@
 
                         <div>
                             <div class="flex justify-between font-bold text-amber-400 mb-1">
-                                <span><i class="fa-solid fa-ship"></i> KUOTA KERUK (Eh) <button onclick="openParamInfo('keruk')" class="ml-1 text-amber-300 hover:text-amber-100 text-[10px] cursor-pointer" title="Formula & penjelasan parameter"><i class="fa-solid fa-circle-info"></i></button></span>
+                                <span><i class="fa-solid fa-ship"></i> KUOTA KERUK (Eh) <button onclick="openParamInfo('keruk')" class="ml-1 text-amber-300 hover:text-amber-100 text-[13px] cursor-pointer" title="Formula & penjelasan parameter"><i class="fa-solid fa-circle-info"></i></button></span>
                                 <span id="lbl-keruk" class="text-white">30% (Terkendali)</span>
                             </div>
                             <input type="range" id="slider-keruk" min="0" max="100" value="30" oninput="onSliderChange()" class="w-full accent-amber-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg">
@@ -498,7 +498,7 @@
 
                         <div>
                             <div class="flex justify-between font-bold text-purple-400 mb-1">
-                                <span><i class="fa-solid fa-shield-halved"></i> KEBIJAKAN (π_policy) <button onclick="openParamInfo('policy')" class="ml-1 text-purple-300 hover:text-purple-100 text-[10px] cursor-pointer" title="Formula & penjelasan parameter"><i class="fa-solid fa-circle-info"></i></button></span>
+                                <span><i class="fa-solid fa-shield-halved"></i> KEBIJAKAN (π_policy) <button onclick="openParamInfo('policy')" class="ml-1 text-purple-300 hover:text-purple-100 text-[13px] cursor-pointer" title="Formula & penjelasan parameter"><i class="fa-solid fa-circle-info"></i></button></span>
                                 <span id="lbl-policy" class="text-white">0.85 (Kuat)</span>
                             </div>
                             <input type="range" id="slider-policy" min="0" max="100" value="85" oninput="onSliderChange()" class="w-full accent-purple-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg">
@@ -611,11 +611,11 @@
     <div id="paramInfoModal" class="fixed inset-0 z-[112] hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4" onclick="if(event.target===this)closeParamInfoModal()">
         <div class="bg-slate-900 border-2 border-emerald-600/70 rounded-2xl max-w-lg w-full max-h-[86vh] overflow-y-auto shadow-2xl">
             <div class="sticky top-0 bg-slate-950/95 border-b border-slate-800 px-4 py-3 flex justify-between items-center gap-2 z-10">
-                <h3 id="paramInfoTitle" class="font-tech text-sm font-black text-emerald-400 uppercase tracking-wide flex items-center gap-2"><i class="fa-solid fa-square-root-variable"></i> Info Parameter</h3>
+                <h3 id="paramInfoTitle" class="font-tech text-base font-black text-emerald-400 uppercase tracking-wide flex items-center gap-2"><i class="fa-solid fa-square-root-variable"></i> Info Parameter</h3>
                 <button onclick="closeParamInfoModal()" class="text-slate-400 hover:text-white text-lg cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div id="paramInfoBody" class="p-4 text-[12px] text-slate-300 leading-relaxed font-sans space-y-3"></div>
-            <div class="px-4 pb-3 text-[9px] text-slate-500 font-mono">Model: Stock-Flow System Dynamics · Integrasi Euler dt=0.25 thn (2024–2040) · DSS Sedimen Pro v4.1</div>
+            <div id="paramInfoBody" class="p-4 text-[14.5px] text-slate-300 leading-relaxed font-sans space-y-3"></div>
+            <div class="px-4 pb-3 text-[10.5px] text-slate-500 font-mono">Model: Stock-Flow System Dynamics · Integrasi Euler dt=0.25 thn (2024–2040) · DSS Sedimen Pro v4.1</div>
         </div>
     </div>
 
@@ -2339,7 +2339,7 @@ function renderBilateralPlume(valDebit, tidePhase){
 
                 </div>
                 <div class="bg-slate-900 border-x border-b border-emerald-800/60 rounded-b-2xl p-2 text-center">
-                    <p class="text-[9px] text-slate-400 font-mono">© 2026 DSS Sedimen Pro v4.6 Professional — Disertasi S3 Teknik Sipil UNDIP (Yusuf Hadi Nugroho) | Pengembang: <b class="text-emerald-400">Ir. Mohamad Hartadi</b> — Civil Engineer &amp; AI System Developer | FB: m.hartadi · Blog: newbieonline7.blogspot.com · WA: 0822-3103-6047</p>
+                    <p class="text-[9px] text-slate-400 font-mono">© 2026 DSS Sedimen Pro v4.7 Professional — Disertasi S3 Teknik Sipil UNDIP (Yusuf Hadi Nugroho) | Pengembang: <b class="text-emerald-400">Ir. Mohamad Hartadi</b> — Civil Engineer &amp; AI System Developer | FB: m.hartadi · Blog: newbieonline7.blogspot.com · WA: 0822-3103-6047</p>
                 </div>
             </div>
         </div>
@@ -2486,15 +2486,15 @@ function openParamInfo(key){
   const d = PARAM_INFO[key]; if(!d) return;
   document.getElementById('paramInfoTitle').innerHTML = `<i class="fa-solid fa-square-root-variable"></i> ${d.judul}`;
   document.getElementById('paramInfoBody').innerHTML = `
-    <div class="text-[10px] font-mono uppercase tracking-wider text-slate-500">Simbol & Satuan</div>
-    <div class="font-mono text-[12px] ${d.warna} font-bold">[${d.satuan}]</div>
-    <div class="text-[10px] font-mono uppercase tracking-wider text-slate-500 pt-1">Formula dalam Model</div>
-    <div class="bg-slate-950 border border-slate-700 rounded-lg p-2.5 font-mono text-[11px] text-emerald-300 leading-relaxed overflow-x-auto">${d.formula.map(f=>f.replace(/</g,'&lt;')).join('<br>')}</div>
-    <div class="text-[10px] font-mono uppercase tracking-wider text-slate-500 pt-1">Penjelasan</div>
-    <p>${d.jel}</p>
-    <div class="text-[10px] font-mono uppercase tracking-wider text-slate-500 pt-1">Peran dalam Simulasi SD</div>
-    <p class="text-slate-200">${d.peran}</p>
-    <div class="border-t border-slate-800 pt-2 text-[10px] text-slate-500"><i class="fa-solid fa-book"></i> ${d.ref}</div>
+    <div class="text-[11.5px] font-mono uppercase tracking-wider text-slate-400 font-bold">Simbol & Satuan</div>
+    <div class="font-mono text-[15px] ${d.warna} font-bold">[${d.satuan}]</div>
+    <div class="text-[11.5px] font-mono uppercase tracking-wider text-slate-400 font-bold pt-1">Formula dalam Model</div>
+    <div class="bg-slate-950 border border-slate-700 rounded-lg p-3 font-mono text-[13.5px] text-emerald-300 leading-relaxed overflow-x-auto">${d.formula.map(f=>f.replace(/</g,'&lt;')).join('<br>')}</div>
+    <div class="text-[11.5px] font-mono uppercase tracking-wider text-slate-400 font-bold pt-1">Penjelasan</div>
+    <p class="text-[14.5px] leading-relaxed">${d.jel}</p>
+    <div class="text-[11.5px] font-mono uppercase tracking-wider text-slate-400 font-bold pt-1">Peran dalam Simulasi SD</div>
+    <p class="text-slate-200 text-[14.5px] leading-relaxed">${d.peran}</p>
+    <div class="border-t border-slate-800 pt-2 text-[11px] text-slate-400"><i class="fa-solid fa-book"></i> ${d.ref}</div>
   `;
   document.getElementById('paramInfoModal').classList.remove('hidden');
 }
